@@ -40,3 +40,16 @@ def test_print_func_info_4(capsys):
     foo(1, 4, 5,  beta = 2, gamma = 3)
     captured = capsys.readouterr()
     assert "foo (alpha = 1, 4, 5, beta = 2, gamma = 3)\n" == captured.out
+
+def test_add_print_func_to_methods_1(capsys):
+    @libinfo.print_func_info_in_methods()
+    class Foo:
+        def __init__(self):
+            self.a = 0
+        def print_a(self, a = 1):
+            print(self.a)
+            print(a)
+    foo = Foo()
+    foo.print_a(a = 2)
+    captured = capsys.readouterr()
+    assert "print_a (self, a = 2)\n" == captured.out
