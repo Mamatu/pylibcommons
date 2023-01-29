@@ -14,7 +14,7 @@ def get_caller_args(caller):
     if keywords: output.extend([(k, v) for k, v in values[keywords].items()])
     return output
 
-def get_func_info(level = 1, print_filename_and_linenumber_of_call = True):
+def get_func_info(level = 1, print_filename_and_linenumber_of_call = True, extra_string = None):
     frame = inspect.stack()[level]
     caller = frame[0]
     function_name = frame[3]
@@ -34,9 +34,12 @@ def get_func_info(level = 1, print_filename_and_linenumber_of_call = True):
     args = map(lambda arg: str(arg), args)
     args = ", ".join(args)
     args = args.replace("[", "").replace("]", "").replace("\"", "")
+    output = f"{function_name} ({args})"
     if print_filename_and_linenumber_of_call:
-        return f"{function_name} ({args}) {frame.filename}:{frame.lineno}"
-    return f"{function_name} ({args})"
+        output = f"{output} {frame.filename}:{frame.lineno}"
+    if extra_string:
+        output = f"{output} {extra_string}"
+    return output
 
-def print_func_info(print_filename_and_linenumber_of_call = True):
-    print(get_func_info(level = 2, print_filename_and_linenumber_of_call = print_filename_and_linenumber_of_call))
+def print_func_info(print_filename_and_linenumber_of_call = True, extra_string = None):
+    print(get_func_info(level = 2, print_filename_and_linenumber_of_call = print_filename_and_linenumber_of_call, extra_string = extra_string))
