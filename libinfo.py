@@ -14,12 +14,10 @@ def get_caller_args(caller):
     if keywords: output.extend([(k, v) for k, v in values[keywords].items()])
     return output
 
-def get_func_info(level = 1):
+def get_func_info(level = 1, print_filename_and_linenumber_of_call = True):
     frame = inspect.stack()[level]
     caller = frame[0]
     function_name = frame[3]
-    frame.filename
-    frame.lineno
     args = get_caller_args(caller)
     for arg in args:
         if isinstance(arg, tuple):
@@ -36,7 +34,9 @@ def get_func_info(level = 1):
     args = map(lambda arg: str(arg), args)
     args = ", ".join(args)
     args = args.replace("[", "").replace("]", "").replace("\"", "")
+    if print_filename_and_linenumber_of_call:
+        return f"{function_name} ({args}) {frame.filename}:{frame.lineno}"
     return f"{function_name} ({args})"
 
-def print_func_info():
-    print(get_func_info(level = 2))
+def print_func_info(print_filename_and_linenumber_of_call = True):
+    print(get_func_info(level = 2, print_filename_and_linenumber_of_call = print_filename_and_linenumber_of_call))
