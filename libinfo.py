@@ -76,31 +76,31 @@ def print_func_info(**kwargs):
 
 def print_func_info_in_methods(**kwargs):
     outer_kwargs = kwargs
+    def parse_kwargs(_kwargs, method):
+        inner_kwargs = _kwargs.copy()
+        function_name = libkw.handle_kwargs("function_name", default_output = None, **inner_kwargs)
+        file_name = libkw.handle_kwargs(["file_name", "filename"], default_output = None, **inner_kwargs)
+        lineno = libkw.handle_kwargs("lineno", default_output = None, **inner_kwargs)
+        if function_name == None:
+            inner_kwargs["function_name"] = method.__name__
+        filename_lineno = get_filename_lineno()
+        if file_name == None:
+            inner_kwargs["file_name"] = filename_lineno[0]
+        if lineno == None:
+            inner_kwargs["lineno"] = filename_lineno[1]
+        return inner_kwargs
     def class_wrapper(clazz):
         methods = [method for method in dir(clazz) if not method.startswith("__")]
         for method in methods:
             orig_method = clazz.__dict__[method]
             def wrapper(self, *args, **kwargs):
-                inner_kwargs = outer_kwargs.copy()
-                function_name = libkw.handle_kwargs("function_name", default_output = None, **inner_kwargs)
-                file_name = libkw.handle_kwargs(["file_name", "filename"], default_output = None, **inner_kwargs)
-                lineno = libkw.handle_kwargs("lineno", default_output = None, **inner_kwargs)
-                if function_name == None:
-                    inner_kwargs["function_name"] = orig_method.__name__
-                filename_lineno = get_filename_lineno()
-                if file_name == None:
-                    inner_kwargs["file_name"] = filename_lineno[0]
-                if lineno == None:
-                    inner_kwargs["lineno"] = filename_lineno[1]
+                inner_kwargs = parse_kwargs(outer_kwargs, orig_method)
                 print_func_info(**inner_kwargs)
                 return orig_method(self, *args, **kwargs)
             setattr(clazz, str(method), wrapper)
         orig_init = clazz.__init__
         def __init__(self, *args, **kwargs):
-            inner_kwargs = outer_kwargs.copy()
-            function_name = libkw.handle_kwargs("function_name", default_output = None, **inner_kwargs)
-            if function_name == None:
-                inner_kwargs["function_name"] = orig_init.__name__
+            inner_kwargs = parse_kwargs(outer_kwargs, orig_init)
             print_func_info(**inner_kwargs)
             orig_init(self, *args, **kwargs)
         clazz.__init__ = __init__
