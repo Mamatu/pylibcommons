@@ -45,9 +45,9 @@ def get_func_info(level = 1, **kwargs):
         function_name = frame[3]
     filename_lineno = get_filename_lineno(level = level)
     if file_name != None:
-        filename_lineno.set_filename(filename_lineno[0])
+        filename_lineno.set_filename(file_name)
     if lineno != None:
-        filename_lineno.set_lineno(filename_lineno[1])
+        filename_lineno.set_lineno(lineno)
     args = get_caller_args(caller)
     for arg in args:
         if isinstance(arg, tuple):
@@ -83,7 +83,7 @@ def print_func_info_in_methods(**kwargs):
         lineno = libkw.handle_kwargs("lineno", default_output = None, **inner_kwargs)
         if function_name == None:
             inner_kwargs["function_name"] = method.__name__
-        filename_lineno = get_filename_lineno()
+        filename_lineno = get_filename_lineno(level = 3)
         if file_name == None:
             inner_kwargs["file_name"] = filename_lineno[0]
         if lineno == None:
