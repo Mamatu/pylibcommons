@@ -8,6 +8,50 @@ __maintainer__ = "Marcin Matula"
 import inspect
 from pylibcommons import libkw
 
+def print_func_info(**kwargs):
+    print(get_func_info(level = 2, **kwargs))
+
+def print_func_info_in_methods(**kwargs):
+    outer_kwargs = kwargs
+    def parse_kwargs(_kwargs, method):
+        inner_kwargs = _kwargs.copy()
+        function_name = libkw.handle_kwargs("function_name", default_output = None, **inner_kwargs)
+        file_name = libkw.handle_kwargs(["file_name", "filename"], default_output = None, **inner_kwargs)
+        lineno = libkw.handle_kwargs("lineno", default_output = None, **inner_kwargs)
+        if function_name == None:
+            inner_kwargs["function_name"] = method.__name__
+        filename_lineno = get_filename_lineno(level = 3)
+        if file_name == None:
+            inner_kwargs["file_name"] = filename_lineno[0]
+        if lineno == None:
+            inner_kwargs["lineno"] = filename_lineno[1]
+        return inner_kwargs
+    def class_wrapper(clazz):
+        methods = [method for method in dir(clazz) if not method.startswith("__")]
+        for method in methods:
+            orig_method = clazz.__dict__[method]
+            def wrapper(self, *args, **kwargs):
+                inner_kwargs = parse_kwargs(outer_kwargs, orig_method)
+                prefix = None
+                begin_end = libkw.handle_kwargs("begin_end", default_output = True, **inner_kwargs)
+                if begin_end:
+                    prefix = "+ "
+                print_func_info(**inner_kwargs, prefix = prefix)
+                try:
+                    return orig_method(self, *args, **kwargs)
+                finally:
+                    if begin_end:
+                        print_func_info(**inner_kwargs, prefix = "- ")
+            setattr(clazz, str(method), wrapper)
+        orig_init = clazz.__init__
+        def __init__(self, *args, **kwargs):
+            inner_kwargs = parse_kwargs(outer_kwargs, orig_init)
+            print_func_info(**inner_kwargs)
+            return orig_init(self, *args, **kwargs)
+        clazz.__init__ = __init__
+        return clazz
+    return class_wrapper
+
 def get_caller_args(caller):
     args, varargs, keywords, values = inspect.getargvalues(caller)
     output = [(i, values[i]) for i in args]
@@ -44,6 +88,7 @@ def get_func_info(level = 1, **kwargs):
     function_name = libkw.handle_kwargs("function_name", default_output = None, **kwargs)
     file_name = libkw.handle_kwargs(["file_name", "filename"], default_output = None, **kwargs)
     lineno = libkw.handle_kwargs("lineno", default_output = None, **kwargs)
+    prefix = libkw.handle_kwargs("prefix", default_output = None, **kwargs)
     frame = inspect.stack()[level]
     caller = get_caller_from_frame_or_level(frame)
     if function_name == None:
@@ -70,44 +115,10 @@ def get_func_info(level = 1, **kwargs):
     args = ", ".join(args)
     args = args.replace("[", "").replace("]", "").replace("\"", "")
     output = f"{function_name} ({args})"
+    if prefix:
+        output = f"{prefix}{output}"
     if pfaloc:
         output = f"{output} {filename_lineno}"
     if extra_string:
         output = f"{output} {extra_string}"
     return output
-
-def print_func_info(**kwargs):
-    print(get_func_info(level = 2, **kwargs))
-
-def print_func_info_in_methods(**kwargs):
-    outer_kwargs = kwargs
-    def parse_kwargs(_kwargs, method):
-        inner_kwargs = _kwargs.copy()
-        function_name = libkw.handle_kwargs("function_name", default_output = None, **inner_kwargs)
-        file_name = libkw.handle_kwargs(["file_name", "filename"], default_output = None, **inner_kwargs)
-        lineno = libkw.handle_kwargs("lineno", default_output = None, **inner_kwargs)
-        if function_name == None:
-            inner_kwargs["function_name"] = method.__name__
-        filename_lineno = get_filename_lineno(level = 3)
-        if file_name == None:
-            inner_kwargs["file_name"] = filename_lineno[0]
-        if lineno == None:
-            inner_kwargs["lineno"] = filename_lineno[1]
-        return inner_kwargs
-    def class_wrapper(clazz):
-        methods = [method for method in dir(clazz) if not method.startswith("__")]
-        for method in methods:
-            orig_method = clazz.__dict__[method]
-            def wrapper(self, *args, **kwargs):
-                inner_kwargs = parse_kwargs(outer_kwargs, orig_method)
-                print_func_info(**inner_kwargs)
-                return orig_method(self, *args, **kwargs)
-            setattr(clazz, str(method), wrapper)
-        orig_init = clazz.__init__
-        def __init__(self, *args, **kwargs):
-            inner_kwargs = parse_kwargs(outer_kwargs, orig_init)
-            print_func_info(**inner_kwargs)
-            orig_init(self, *args, **kwargs)
-        clazz.__init__ = __init__
-        return clazz
-    return class_wrapper
