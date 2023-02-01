@@ -13,6 +13,27 @@ from pylibcommons import libinfo
 
 import pytest
 
+def test_self_detection(capsys):
+    class Foo:
+        def foo1(self, x, b):
+            caller = libinfo.get_caller_from_frame_or_level(1)
+            args = libinfo.get_caller_args(caller)
+            print(caller)
+            print(caller.f_locals)
+            print(caller.f_code.co_name)
+            print(dir(caller.f_code))
+            print(args)
+    def foo(x, b):
+        caller = libinfo.get_caller_from_frame_or_level(1)
+        args = libinfo.get_caller_args(caller)
+        assert not hasattr(caller, "__self__")
+        print(args)
+    #foo("a", "b")
+    foo = Foo()
+    foo.foo1("a", "b")
+    #captured = capsys.readouterr()
+    #assert "foo (x = 'a', b = 'b')\n" == captured.out
+
 def test_print_func_info_1(capsys):
     def foo(x, b):
         libinfo.print_func_info(print_filename_and_linenumber_of_call = False)

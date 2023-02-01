@@ -32,6 +32,11 @@ def get_filename_lineno(level = 1):
             return f"{self.info[0]}:{self.info[1]}"
     return Wrapper(frame)
 
+def get_caller_from_frame_or_level(frame_level):
+    if isinstance(frame_level, int):
+        frame_level = inspect.stack()[frame_level]
+    return frame_level[0]
+
 def get_func_info(level = 1, **kwargs):
     pfaloc = libkw.handle_kwargs("print_filename_and_linenumber_of_call", default_output = True, **kwargs)
     extra_string = libkw.handle_kwargs("extra_string", default_output = None, **kwargs)
@@ -40,7 +45,7 @@ def get_func_info(level = 1, **kwargs):
     file_name = libkw.handle_kwargs(["file_name", "filename"], default_output = None, **kwargs)
     lineno = libkw.handle_kwargs("lineno", default_output = None, **kwargs)
     frame = inspect.stack()[level]
-    caller = frame[0]
+    caller = get_caller_from_frame_or_level(frame)
     if function_name == None:
         function_name = frame[3]
     filename_lineno = get_filename_lineno(level = level)
