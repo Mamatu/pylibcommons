@@ -5,6 +5,7 @@ __license__ = "Apache License"
 __version__ = "2.0"
 __maintainer__ = "Marcin Matula"
 
+import copy
 import inspect
 from pylibcommons import libkw
 
@@ -13,6 +14,20 @@ def print_func_info(**kwargs):
 
 def print_func_info_in_methods(**kwargs):
     outer_kwargs = kwargs
+    def _print_info(func):
+        def wrapper(*args, **kwargs):
+            inner_kwargs = parse_kwargs(kwargs, func)
+            begin_end = libkw.handle_kwargs("begin_end", default_output = True, **inner_kwargs)
+            prefix = None
+            if begin_end:
+                prefix = "+ "
+            print_func_info(**inner_kwargs, prefix = prefix)
+            try:
+                return func(*args, **kwargs)
+            finally:
+                if begin_end:
+                    print_func_info(**inner_kwargs, prefix = "- ")
+        return wrapper
     def parse_kwargs(_kwargs, method):
         inner_kwargs = _kwargs.copy()
         function_name = libkw.handle_kwargs("function_name", default_output = None, **inner_kwargs)
@@ -30,23 +45,16 @@ def print_func_info_in_methods(**kwargs):
         methods = [method for method in dir(clazz) if not method.startswith("__")]
         for method in methods:
             orig_method = clazz.__dict__[method]
-            def wrapper(self, *args, **kwargs):
-                inner_kwargs = parse_kwargs(outer_kwargs, orig_method)
-                prefix = None
-                begin_end = libkw.handle_kwargs("begin_end", default_output = True, **inner_kwargs)
-                if begin_end:
-                    prefix = "+ "
-                print_func_info(**inner_kwargs, prefix = prefix)
-                try:
+            def make_wrapper(orig_method):
+                orig_method = orig_method
+                @_print_info
+                def wrapper(self, *args, **kwargs):
                     return orig_method(self, *args, **kwargs)
-                finally:
-                    if begin_end:
-                        print_func_info(**inner_kwargs, prefix = "- ")
-            setattr(clazz, str(method), wrapper)
+                return wrapper
+            setattr(clazz, str(method), make_wrapper(orig_method))
         orig_init = clazz.__init__
+        @_print_info
         def __init__(self, *args, **kwargs):
-            inner_kwargs = parse_kwargs(outer_kwargs, orig_init)
-            print_func_info(**inner_kwargs)
             return orig_init(self, *args, **kwargs)
         clazz.__init__ = __init__
         return clazz

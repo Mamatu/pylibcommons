@@ -67,23 +67,25 @@ def test_add_print_func_to_methods_1(capsys):
         assert libgrep.grep_in_text(line[1], line[0])
 
 def test_add_print_func_to_methods_with_begin_end_support(capsys):
-    @libprint.print_func_info_in_methods(begin_end = False)
+    @libprint.print_func_info_in_methods(begin_end = True)
     class Foo:
         def __init__(self):
             self.a = 0
         def foo(self, a = 2):
             self.bar(a)
         def bar(self, a = 1):
-            pass
+            print("2")
     foo = Foo()
     foo.foo(a = 2)
     captured = capsys.readouterr()
     expected = [
-        "+ __init__ (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:78",
-        "- __init__ (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:78",
-        "print_a (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:54",
+        "+ __init__ (<ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:78",
+        "- __init__ (<ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:78",
+        "+ foo (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:54",
+        "+ bar (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:54",
+        "- bar (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:54",
+        "- foo (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:54",
         "0",
-        "2"
     ]
     out = captured.out
     out = out.split("\n")
