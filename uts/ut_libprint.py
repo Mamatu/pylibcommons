@@ -107,3 +107,19 @@ def test_add_print_func_to_methods_with_begin_end_support(capsys):
         print(line[0])
         print(line[1])
         assert libgrep.grep_in_text(line[1], line[0])
+
+def test_get_func_args_3():
+    def foo(alpha, beta):
+        args = libprint.get_func_args()
+        assert [('alpha', 1), ('beta', (0, 0, 1))] == args
+        args = libprint.convert_args_to_str(args = args)
+        assert 'alpha = 1, beta = (0, 0, 1)' == args
+    foo(1,  beta = (0, 0, 1))
+
+def test_get_func_args_4():
+    def foo(alpha, beta):
+        args = libprint.get_func_args()
+        assert [('alpha', 1), ('beta', [0, 0, 1])] == args
+        args = libprint.convert_args_to_str(args = args)
+        assert 'alpha = 1, beta = [0, 0, 1]' == args
+    foo(1,  beta = [0, 0, 1])

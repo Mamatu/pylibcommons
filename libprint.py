@@ -62,9 +62,9 @@ def class_debug_prints(**kwargs):
 
 def get_caller_args(caller):
     args, varargs, keywords, values = inspect.getargvalues(caller)
-    output = [(i, values[i]) for i in args]
+    output = [(_ArgName(i), values[i]) for i in args]
     if varargs: output.extend([(i) for i in values[varargs]])
-    if keywords: output.extend([(k, v) for k, v in values[keywords].items()])
+    if keywords: output.extend([(_ArgName(k), v) for k, v in values[keywords].items()])
     return output
 
 class Filename_Lineno:
@@ -124,21 +124,28 @@ def convert_args_to_str(**kwargs):
     if args is None:
         args = get_func_args(level = level + 1)
     for arg in args:
-        if isinstance(arg, tuple):
+        idx = args.index(arg)
+        if isinstance(arg, list) or isinstance(arg, tuple):
             if len(arg) == 2:
-                idx = args.index(arg)
+                arg0 = f"{arg[0]}, "
+                if type(arg[0]) == _ArgName:
+                    arg0 = f"{arg[0]} = "
                 if isinstance(arg[1], str):
-                    args[idx] = f"{arg[0]} = \'{arg[1]}\'"
+                    arg = f"{arg0}\'{arg[1]}\'"
+                elif isinstance(arg[1], list):
+                    arg = f"{arg0}{arg[1]}"
+                elif isinstance(arg[1], tuple):
+                    arg = f"{arg0}{arg[1]}"
                 else:
-                    args[idx] = f"{arg[0]} = {arg[1]}"
+                    arg = f"{arg0}{arg[1]}"
             elif len(arg) == 1:
-                args[idx] = f"{arg[0]}"
-            else:
-                raise Exception("Not supported length of arg")
+                arg = f"{arg[0]}"
+            elif len(arg) > 1:
+                arg = str(arg)
+        args[idx] = arg
     args = map(lambda arg: str(arg), args)
-    args = ", ".join(args)
-    return args.replace("[", "").replace("]", "").replace("\"", "")
-    
+    return ", ".join(args)
+
 def get_func_info(**kwargs):
     level = libkw.handle_kwargs("level", default_output = 1, **kwargs)
     pfaloc = libkw.handle_kwargs("print_filename_and_linenumber_of_call", default_output = True, **kwargs)
@@ -165,3 +172,13 @@ def get_func_info(**kwargs):
     if extra_string:
         output = f"{output} {extra_string}"
     return output
+
+class _ArgName:
+    def __init__(self, name):
+        self.name = name
+    def __str__(self):
+        return self.name
+    def __repr__(self):
+        return self.name
+    def __eq__(self, other):
+        return str(self) == str(other)
