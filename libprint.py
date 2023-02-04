@@ -40,8 +40,10 @@ def class_debug_prints(**kwargs):
     def class_wrapper(clazz):
         predicate = lambda x: inspect.ismethod(x) or inspect.isfunction(x)
         methods = inspect.getmembers(clazz, predicate = predicate)
-        methods = [method[0] for method in methods if not method[0].startswith("__")]
+        methods = [method[0] for method in methods if not method[0].startswith("_")]
         for method in methods:
+            if method not in clazz.__dict__:
+                continue
             orig_method = clazz.__dict__[method]
             def make_wrapper(orig_method):
                 orig_method = orig_method
