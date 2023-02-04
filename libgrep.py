@@ -7,6 +7,7 @@ __maintainer__ = "Marcin Matula"
 
 import logging
 from pylibcommons import libkw
+from pylibcommons.private.libtempfile import create_temp_file
 
 def grep(filepath, regex, **kwargs):
     fromLine = libkw.handle_kwargs(["fromLine", "from_line", "n"], default_output = 1, **kwargs)
@@ -32,7 +33,7 @@ def grep(filepath, regex, **kwargs):
     if command == None:
         raise Exception("Grep command was failed on initialization")
     logging.debug(f"{grep.__name__}: {command}")
-    with _open_temp_file() as fout, _open_temp_file() as ferr:
+    with create_temp_file() as fout, create_temp_file() as ferr:
         logging.debug(f"{grep.__name__}: fout {fout.name}")
         logging.debug(f"{grep.__name__}: ferr {ferr.name}")
         def readlines(f):
@@ -56,7 +57,7 @@ def grep(filepath, regex, **kwargs):
 
 def grep_in_text(text, regex, **kwargs):
     try:
-        file = _open_temp_file(mode = "w+", data = text)
+        file = create_temp_file(mode = "w+", data = text)
         return grep(file.name, regex, **kwargs)
     finally:
         file.close()
@@ -69,13 +70,10 @@ def grep_regex_in_line(filepath, grep_regex, match_regex, **kwargs):
     :maxCount - max count of matched, if it is -1 it will be infinity
     :fromLine - start searching from specific line
     """
-    from vatf.utils.kw_utils import handle_kwargs
-    fromLine = handle_kwargs(["fromLine", "from_line"], 1, **kwargs)
-    from vatf.utils.utils import _open_temp_file, name_and_args
     import re
+    fromLine = libkw.handle_kwargs(["fromLine", "from_line"], 1, **kwargs)
     if fromLine < 1:
         raise Exception(f"Invalid fromLine value {fromLine}")
-    logging.debug(f"{grep_regex_in_line.__name__}: {name_and_args()}")
     out = grep(filepath, grep_regex, **kwargs)
     rec = re.compile(match_regex)
     matched_lines = []
@@ -84,16 +82,6 @@ def grep_regex_in_line(filepath, grep_regex, match_regex, **kwargs):
         if matched:
             matched_lines.append(o)
     return matched_lines
-
-def _open_temp_file(mode = "w+", data = None):
-    import tempfile
-    f = tempfile.NamedTemporaryFile(mode = mode)
-    if data and "w" in mode:
-        f.write(data)
-        f.flush()
-    elif data:
-        raise Exception("If any data to write then mode must be w")
-    return f
 
 class GrepOutput:
     def __init__(self, line_number = None, matched = None, line_offset = 0):
