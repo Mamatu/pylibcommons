@@ -14,7 +14,7 @@ def print_func_info(**kwargs):
     kwargs["level"] = level + 1
     print(get_func_info(**kwargs))
 
-def print_func_info_in_methods(**kwargs):
+def class_debug_prints(**kwargs):
     outer_kwargs = kwargs
     def _print_info(orig_method):
         def wrapper_func(func):
