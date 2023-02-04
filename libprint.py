@@ -15,6 +15,11 @@ def print_func_info(**kwargs):
     print(get_func_info(**kwargs))
 
 def class_debug_prints(**kwargs):
+    """
+    Not to use. It seems that there is no a way in python to handle properly this type of decorator
+    """
+    from warnings import warn
+    warn("Not to use. It seems that there is no a way in python to handle properly this type of decorator")
     outer_kwargs = kwargs
     def _print_info(orig_method):
         def wrapper_func(func):
