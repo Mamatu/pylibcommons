@@ -52,11 +52,13 @@ def class_debug_prints(**kwargs):
                     return orig_method(self, *args, **kwargs)
                 return wrapper
             setattr(clazz, str(method), make_wrapper(orig_method))
-        orig_init = clazz.__init__
-        @_print_info(orig_init)
-        def __init__(self, *args, **kwargs):
-            return orig_init(self = self, *args, **kwargs)
-        clazz.__init__ = __init__
+        is_handle_init = libkw.handle_kwargs("handle_init", default_output = False, **outer_kwargs)
+        if is_handle_init:
+            orig_init = clazz.__init__
+            @_print_info(orig_init)
+            def __init__(self, *args, **kwargs):
+                return orig_init(self = self, *args, **kwargs)
+            clazz.__init__ = __init__
         return clazz
     return class_wrapper
 

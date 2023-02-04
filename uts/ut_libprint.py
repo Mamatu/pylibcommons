@@ -55,7 +55,7 @@ def test_get_func_args_2():
     foo(1, 4, 5,  beta = 2, gamma = 3)
 
 def test_add_print_func_to_methods_1(capsys):
-    @libprint.class_debug_prints(begin_end = False)
+    @libprint.class_debug_prints(begin_end = False, handle_init = True)
     class Foo:
         def __init__(self):
             self.a = 0
@@ -79,7 +79,7 @@ def test_add_print_func_to_methods_1(capsys):
         assert libgrep.grep_in_text(line[1], line[0])
 
 def test_add_print_func_to_methods_with_begin_end_support(capsys):
-    @libprint.class_debug_prints(begin_end = True)
+    @libprint.class_debug_prints(begin_end = True, handle_init = True)
     class Foo:
         def __init__(self):
             self.a = 0
