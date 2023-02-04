@@ -42,6 +42,18 @@ def test_print_func_info_4(capsys):
     captured = capsys.readouterr()
     assert "foo (alpha = 1, 4, 5, beta = 2, gamma = 3)\n" == captured.out
 
+def test_get_func_args_1():
+    def foo(alpha, **kwargs):
+        args = libprint.get_func_args()
+        assert [('alpha', 1), ('beta', 2), ('gamma', 3)] == args
+    foo(alpha = 1, beta = 2, gamma = 3)
+
+def test_get_func_args_2():
+    def foo(alpha, *args, **kwargs):
+        args = libprint.get_func_args()
+        assert [('alpha', 1), 4, 5, ('beta', 2), ('gamma', 3)] == args
+    foo(1, 4, 5,  beta = 2, gamma = 3)
+
 def test_add_print_func_to_methods_1(capsys):
     @libprint.print_func_info_in_methods(begin_end = False)
     class Foo:
@@ -54,8 +66,8 @@ def test_add_print_func_to_methods_1(capsys):
     foo.print_a(a = 2)
     captured = capsys.readouterr()
     expected = [
-        "__init__ (self = <ut_libprint.test_add_print_func_to_methods_1.<locals>.Foo object at .*>) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:53",
-        "print_a (self = <ut_libprint.test_add_print_func_to_methods_1.<locals>.Foo object at .*>, a = 2) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:54",
+        "__init__ (self = <ut_libprint.test_add_print_func_to_methods_1.<locals>.Foo object at .*>) .*pylibcommons/uts/ut_libprint.py:65",
+        "print_a (self = <ut_libprint.test_add_print_func_to_methods_1.<locals>.Foo object at .*>, a = 2) .*pylibcommons/uts/ut_libprint.py:66",
         "0",
         "2"
     ]
@@ -79,17 +91,19 @@ def test_add_print_func_to_methods_with_begin_end_support(capsys):
     foo.foo(a = 2)
     captured = capsys.readouterr()
     expected = [
-        "+ __init__ (<ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:78",
-        "- __init__ (<ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:78",
-        "+ foo (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:54",
-        "+ bar (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:54",
-        "- bar (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:54",
-        "- foo (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*/pyjobs/private/pylibcommons/uts/ut_libprint.py:54",
-        "0",
+        "+ __init__ (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>) .*pylibcommons/uts/ut_libprint.py:90",
+        "- __init__ (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>) .*pylibcommons/uts/ut_libprint.py:90",
+        "+ foo (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*pylibcommons/uts/ut_libprint.py:91",
+        "+ bar (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, 2) .*pylibcommons/uts/ut_libprint.py:87",
+        "2",
+        "- bar (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, 2) .*pylibcommons/uts/ut_libprint.py:87",
+        "- foo (self = <ut_libprint.test_add_print_func_to_methods_with_begin_end_support.<locals>.Foo object at .*>, a = 2) .*pylibcommons/uts/ut_libprint.py:91"
     ]
     out = captured.out
     out = out.split("\n")
     out.remove('')
     assert len(out) == len(expected)
     for line in zip(expected, out):
+        print(line[0])
+        print(line[1])
         assert libgrep.grep_in_text(line[1], line[0])

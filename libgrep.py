@@ -21,10 +21,10 @@ def grep(filepath, regex, **kwargs):
         o_arg = " -o" if onlyMatch else ""
         n_arg = " -n" if lineNumber else ""
         m_arg = " -m {maxCount}" if maxCount > -1 else ""
-        return f"{o_arg}{n_arg}{m_arg} -a"
+        return f"{o_arg}{n_arg}{m_arg}"
     import subprocess, os
     args = makeArgs(lineNumber, maxCount)
-    command = f"grep {args} \"{regex}\""
+    command = f"grep -a {args} -e \"{regex}\""
     if fromLine > 1:
         command = f"sed -n '{fromLine},$p' {filepath} | {command}"
     else:
