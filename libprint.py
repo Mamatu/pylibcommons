@@ -38,7 +38,9 @@ def class_debug_prints(**kwargs):
             return wrapper
         return wrapper_func
     def class_wrapper(clazz):
-        methods = [method for method in dir(clazz) if not method.startswith("__")]
+        predicate = lambda x: inspect.ismethod(x) or inspect.isfunction(x)
+        methods = inspect.getmembers(clazz, predicate = predicate)
+        methods = [method[0] for method in methods if not method[0].startswith("__")]
         for method in methods:
             orig_method = clazz.__dict__[method]
             def make_wrapper(orig_method):
