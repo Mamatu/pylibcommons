@@ -137,14 +137,3 @@ def test_grep_in_text():
     out = libgrep.grep_in_text("2021-12-19 17:59:17.171 line1", "^[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-2][0-9]:[0-6][0-9]:[0-6][0-9].[0-9]\\{3\\}", only_match = True)
     assert (len(out) == 1)
     assert ("2021-12-19 17:59:17.171" == out[0].matched)
-
-def _open_temp_file(mode = "w+", data = None):
-    import tempfile
-    f = tempfile.NamedTemporaryFile(mode = mode)
-    if data and "w" in mode:
-        f.write(data)
-        f.flush()
-    elif data:
-        raise Exception("If any data to write then mode must be w")
-    return f
-
