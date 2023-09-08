@@ -11,8 +11,9 @@ from pylibcommons import libkw
 
 def print_func_info(**kwargs):
     level = libkw.handle_kwargs("level", default_output = 1, **kwargs)
+    logger = libkw.handle_kwargs("logger", default_output = print, **kwargs)
     kwargs["level"] = level + 1
-    print(get_func_info(**kwargs))
+    logger(get_func_info(**kwargs))
 
 def class_debug_prints(**kwargs):
     """
