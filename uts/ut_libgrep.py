@@ -1,6 +1,24 @@
 from pylibcommons import libgrep
 from pylibcommons.private.libtempfile import create_temp_file
 
+from unittest import TestCase
+from unittest.mock import Mock
+from unittest.mock import patch
+
+@patch("os.listdir")
+@patch("os.path.isfile")
+def test_handle_directory_1(os_path_isfile, os_listdir_mock):
+    os_path_isfile.return_value = True
+    os_listdir_mock.return_value = ["1", "10", "2"]
+    assert ["/tmp/1", "/tmp/2", "/tmp/10"] == libgrep.__handle_directory("/tmp/")
+
+@patch("os.listdir")
+@patch("os.path.isfile")
+def test_handle_directory_1(os_path_isfile, os_listdir_mock):
+    os_path_isfile.return_value = True
+    os_listdir_mock.return_value = ["1", "10", "2", "a"]
+    assert ["/tmp/a", "/tmp/1", "/tmp/2", "/tmp/10"] == libgrep.__handle_directory("/tmp/")
+
 def test_grep_line_regex_with_line_two_lines():
     test_file = create_temp_file()
     testfile_path = test_file.name

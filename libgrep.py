@@ -11,10 +11,13 @@ from pylibcommons.private.libtempfile import create_temp_file
 
 __logger = logging.getLogger(__name__)
 
-def grep(filepath, regex, **kwargs):
-    support_directory = libkw.handle_kwargs(["support_directory", "supportDirectory"], False, **kwargs)
-    __handle_directory()
-    __grep(filepath, regex, **kwargs)
+def grep(path, regex, **kwargs):
+    path = __handle_path(path, **kwargs)
+    outputs = []
+    for p in path:
+        o = __grep(p, regex, **kwargs)
+        outputs = outputs + o
+    return outputs
 
 def grep_in_text(text, regex, **kwargs):
     try:
@@ -23,9 +26,9 @@ def grep_in_text(text, regex, **kwargs):
     finally:
         file.close()
 
-def grep_regex_in_line(filepath, grep_regex, match_regex, **kwargs):
+def grep_regex_in_line(path, grep_regex, match_regex, **kwargs):
     """
-    :filepath - filepath for greping
+    :path - path for greping
     :grep_regex - regex using to match line by grep
     :match_regex - regex to extract specific data from line
     :maxCount - max count of matched, if it is -1 it will be infinity
@@ -35,7 +38,7 @@ def grep_regex_in_line(filepath, grep_regex, match_regex, **kwargs):
     fromLine = libkw.handle_kwargs(["fromLine", "from_line"], 1, **kwargs)
     if fromLine < 1:
         raise Exception(f"Invalid fromLine value {fromLine}")
-    out = grep(filepath, grep_regex, **kwargs)
+    out = grep(path, grep_regex, **kwargs)
     rec = re.compile(match_regex)
     matched_lines = []
     for o in out:
@@ -70,7 +73,41 @@ class GrepOutput:
         out = line.split(':', 1)
         return GrepOutput(out[0], out[1], line_offset)
 
-def __grep(filepath, regex, **kwargs):
+import os
+
+def __try_convert_to_int(f):
+    try:
+        return int(f)
+    except ValueError:
+        return f
+
+def __handle_directory(path):
+    dirlist = os.listdir(path)
+    dirlist = [f for f in dirlist if os.path.isfile(f)]
+    numbers = []
+    names = []
+    for f in dirlist:
+        f = __try_convert_to_int(f)
+        if isinstance(f, int):
+            numbers.append(f)
+        else:
+            names.append(f)
+    numbers.sort()
+    names.sort()
+    outputs = names + numbers
+    return [os.path.join(path, str(f)) for f in outputs]
+
+def __handle_path(path, **kwargs):
+    if not os.path.exists(path):
+        raise Exception(f"Path {path} doesn't exist")
+    support_directory = libkw.handle_kwargs(["support_directory", "supportDirectory"], False, **kwargs)
+    if not support_directory and os.path.isdir(path):
+        raise Exception(f"Path {path} is directory - it is not supported. If should be, please use support_directory = True argument")
+    if support_directory and os.path.isdir(path):
+        return __handle_directory(path)
+    return [path]
+
+def __grep(path, regex, **kwargs):
     fromLine = libkw.handle_kwargs(["fromLine", "from_line", "n"], default_output = 1, **kwargs)
     maxCount = libkw.handle_kwargs(["maxCount", "max_count", "m"], default_output = -1, **kwargs)
     onlyMatch = libkw.handle_kwargs(["onlyMatch", "only_match", "o"], default_output = False, **kwargs)
@@ -88,9 +125,9 @@ def __grep(filepath, regex, **kwargs):
     args = makeArgs(lineNumber, maxCount)
     command = f"grep -a {args} -e \"{regex}\""
     if fromLine > 1:
-        command = f"sed -n '{fromLine},$p' {filepath} | {command}"
+        command = f"sed -n '{fromLine},$p' {path} | {command}"
     else:
-        command = f"{command} {filepath}"
+        command = f"{command} {path}"
     if command == None:
         raise Exception("Grep command was failed on initialization")
     __logger.debug(f"{grep.__name__}: {command}")
