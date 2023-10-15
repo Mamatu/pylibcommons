@@ -18,4 +18,3 @@ def terminate_process_and_children(process):
     except subprocess.TimeoutExpired:
         process.kill()
         process.wait(timeout = 1)
-

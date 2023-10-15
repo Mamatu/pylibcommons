@@ -7,7 +7,7 @@ __maintainer__ = "Marcin Matula"
 
 import logging
 from pylibcommons import libkw
-from pylibcommons.private.libtempfile import create_temp_file
+from pylibcommons.private.libtemp import create_temp_file
 
 __logger = logging.getLogger(__name__)
 
@@ -15,6 +15,7 @@ def grep(path, regex, **kwargs):
     path = __handle_path(path, **kwargs)
     outputs = []
     for p in path:
+        print(p)
         o = __grep(p, regex, **kwargs)
         outputs = outputs + o
     return outputs
@@ -48,7 +49,7 @@ def grep_regex_in_line(path, grep_regex, match_regex, **kwargs):
     return matched_lines
 
 class GrepOutput:
-    def __init__(self, line_number = None, matched = None, line_offset = 0):
+    def __init__(self, line_number, matched, line_offset, filepath):
         if line_number:
             try:
                 self.line_number = int(line_number.rstrip())
@@ -57,6 +58,7 @@ class GrepOutput:
                 __logger.error(f"{line_number} cannot be converted to int! ${ex}")
                 raise ex
         self.matched = matched.rstrip()
+        self.filepath = filepath
     def __getitem__(self, idx):
         if idx == 0:
             return self.line_number
@@ -69,9 +71,9 @@ class GrepOutput:
     def __str__(self):
         return f"({self.line_number}, {self.matched})"
     @staticmethod
-    def from_split(line, line_offset = 0):
+    def from_split(line, line_offset, filepath):
         out = line.split(':', 1)
-        return GrepOutput(out[0], out[1], line_offset)
+        return GrepOutput(out[0], out[1], line_offset, filepath)
 
 import os
 
@@ -83,7 +85,9 @@ def __try_convert_to_int(f):
 
 def __handle_directory(path):
     dirlist = os.listdir(path)
-    dirlist = [f for f in dirlist if os.path.isfile(f)]
+    print(f"path {path}")
+    dirlist = [f for f in dirlist if os.path.isfile(os.path.join(path, f))]
+    print(f"dirlist {dirlist}")
     numbers = []
     names = []
     for f in dirlist:
@@ -102,7 +106,7 @@ def __handle_path(path, **kwargs):
         raise Exception(f"Path {path} doesn't exist")
     support_directory = libkw.handle_kwargs(["support_directory", "supportDirectory"], False, **kwargs)
     if not support_directory and os.path.isdir(path):
-        raise Exception(f"Path {path} is directory - it is not supported. If should be, please use support_directory = True argument")
+        raise Exception(f"Path {path} is directory - it is not supported. If should be, please use supportDirectory or support_directory = True argument")
     if support_directory and os.path.isdir(path):
         return __handle_directory(path)
     return [path]
@@ -138,9 +142,9 @@ def __grep(path, regex, **kwargs):
             lines = f.readlines()
             line_offset = 0 if fromLine < 1 else fromLine - 1
             if not lineNumber:
-                lines = [GrepOutput(matched = l, line_offset = line_offset) for l in lines]
+                lines = [GrepOutput(matched = l, line_offset = line_offset, filepath = path) for l in lines]
             else:
-                lines = [GrepOutput.from_split(l, line_offset = line_offset) for l in lines]
+                lines = [GrepOutput.from_split(l, line_offset = line_offset, filepath = path) for l in lines]
             return lines
         process = subprocess.Popen(command, shell=True, stdout=fout, stderr=ferr)
         process.wait()
