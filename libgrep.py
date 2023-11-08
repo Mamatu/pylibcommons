@@ -15,7 +15,6 @@ def grep(path, regex, **kwargs):
     path = __handle_path(path, **kwargs)
     outputs = []
     for p in path:
-        print(p)
         o = __grep(p, regex, **kwargs)
         outputs = outputs + o
     return outputs
@@ -85,9 +84,7 @@ def __try_convert_to_int(f):
 
 def __handle_directory(path):
     dirlist = os.listdir(path)
-    print(f"path {path}")
     dirlist = [f for f in dirlist if os.path.isfile(os.path.join(path, f))]
-    print(f"dirlist {dirlist}")
     numbers = []
     names = []
     for f in dirlist:
