@@ -9,7 +9,7 @@ import logging
 from pylibcommons import libkw
 from pylibcommons.private.libtemp import create_temp_file
 
-__logger = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 def grep(path, regex, **kwargs):
     path = __handle_path(path, **kwargs)
@@ -54,7 +54,7 @@ class GrepOutput:
                 self.line_number = int(line_number.rstrip())
                 self.line_number = self.line_number + line_offset
             except Exception as ex:
-                __logger.error(f"{line_number} cannot be converted to int! ${ex}")
+                _log.error(f"{line_number} cannot be converted to int! ${ex}")
                 raise ex
         self.matched = matched.rstrip()
         self.filepath = filepath
@@ -131,10 +131,10 @@ def __grep(path, regex, **kwargs):
         command = f"{command} {path}"
     if command == None:
         raise Exception("Grep command was failed on initialization")
-    __logger.debug(f"{grep.__name__}: {command}")
+    _log.debug(f"{grep.__name__}: {command}")
     with create_temp_file() as fout, create_temp_file() as ferr:
-        __logger.debug(f"{grep.__name__}: fout {fout.name}")
-        __logger.debug(f"{grep.__name__}: ferr {ferr.name}")
+        _log.debug(f"{grep.__name__}: fout {fout.name}")
+        _log.debug(f"{grep.__name__}: ferr {ferr.name}")
         def readlines(f):
             lines = f.readlines()
             line_offset = 0 if fromLine < 1 else fromLine - 1
