@@ -76,13 +76,7 @@ class GrepOutput:
 
 import os
 
-def __try_convert_to_int(f):
-    try:
-        return int(f)
-    except ValueError:
-        return f
-
-def __handle_directory(path):
+def get_directory_content(path):
     dirlist = os.listdir(path)
     dirlist = [f for f in dirlist if os.path.isfile(os.path.join(path, f))]
     numbers = []
@@ -98,6 +92,12 @@ def __handle_directory(path):
     outputs = names + numbers
     return [os.path.join(path, str(f)) for f in outputs]
 
+def __try_convert_to_int(f):
+    try:
+        return int(f)
+    except ValueError:
+        return f
+
 def __handle_path(path, **kwargs):
     if not os.path.exists(path):
         raise Exception(f"Path {path} doesn't exist")
@@ -105,7 +105,7 @@ def __handle_path(path, **kwargs):
     if not support_directory and os.path.isdir(path):
         raise Exception(f"Path {path} is directory - it is not supported. If should be, please use supportDirectory or support_directory = True argument")
     if support_directory and os.path.isdir(path):
-        return __handle_directory(path)
+        return get_directory_content(path)
     return [path]
 
 def __grep(path, regex, **kwargs):
@@ -145,10 +145,12 @@ def __grep(path, regex, **kwargs):
             else:
                 lines = [GrepOutput.from_split(l, line_offset = line_offset, filepath = path) for l in lines]
             return lines
+        can_be_processed = True
         if pre_grep_callback:
-            pre_grep_callback(path)
-        process = subprocess.Popen(command, shell=True, stdout=fout, stderr=ferr)
-        process.wait()
+            can_be_processed = pre_grep_callback(path)
+        if can_be_processed:
+            process = subprocess.Popen(command, shell=True, stdout=fout, stderr=ferr)
+            process.wait()
         if post_grep_callback:
             post_grep_callback(path)
         if os.path.getsize(ferr.name) > 0:
