@@ -114,6 +114,7 @@ def __grep(path, regex, **kwargs):
     onlyMatch = libkw.handle_kwargs(["onlyMatch", "only_match", "o"], default_output = False, **kwargs)
     pre_grep_callback = libkw.handle_kwargs(["pre_grep_callback"], default_output = None, **kwargs)
     post_grep_callback = libkw.handle_kwargs(["post_grep_callback"], default_output = None, **kwargs)
+    encapsulate_grep_callback = libkw.handle_kwargs(["encapsulate_grep_callback"], default_output = None, **kwargs)
     if fromLine < 1:
         raise Exception(f"Invalid fromLine value {fromLine}")
     if maxCount < -1:
@@ -148,11 +149,18 @@ def __grep(path, regex, **kwargs):
         can_be_processed = True
         if pre_grep_callback:
             can_be_processed = pre_grep_callback(path)
-        if can_be_processed:
-            process = subprocess.Popen(command, shell=True, stdout=fout, stderr=ferr)
-            process.wait()
-        if post_grep_callback:
-            post_grep_callback(path)
+        try:
+            if can_be_processed:
+                def _process():
+                    process = subprocess.Popen(command, shell=True, stdout=fout, stderr=ferr)
+                    process.wait()
+                if not encapsulate_grep_callback:
+                    _process()
+                else:
+                    encapsulate_grep_callback(_process, path)
+        finally:
+            if post_grep_callback:
+                post_grep_callback(path)
         if os.path.getsize(ferr.name) > 0:
             ferr.seek(0)
             err = readlines(ferr)
