@@ -11,18 +11,19 @@ from pylibcommons import libprint
 
 class Process:
     log = log.getChild(__name__)
-    def __init__(self, cmd):
+    def __init__(self, cmd, shell = True):
         self.is_destroyed_flag = False
         import threading
         self.lock = threading.Lock()
         self.cmd = cmd
         self.process = None
+        self.shell = shell
     def was_stopped(self):
         return self.is_destroyed_flag
     def emit_warning_during_destroy(self, ex):
         log.warning(f"{ex}: please verify if process {self.cmd} was properly closed")
     def start(self):
-        self.process = subprocess.Popen(self.cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, universal_newlines = True)
+        self.process = subprocess.Popen(self.cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, universal_newlines = True, shell = self.shell)
         log.info(f"Start process {self.process}")
     def stop(self):
         self.is_destroyed_flag = True
