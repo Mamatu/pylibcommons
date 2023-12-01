@@ -16,7 +16,8 @@ def grep(path, regex, **kwargs):
     outputs = []
     for p in path:
         o = __grep(p, regex, **kwargs)
-        outputs = outputs + o
+        if o is not None:
+            outputs = outputs + o
     return outputs
 
 def grep_in_text(text, regex, **kwargs):
@@ -134,38 +135,40 @@ def __grep(path, regex, **kwargs):
         command = f"{command} {path}"
     if command == None:
         raise Exception("Grep command was failed on initialization")
-    _log.debug(f"{grep.__name__}: {command}")
-    with create_temp_file() as fout, create_temp_file() as ferr:
-        _log.debug(f"{grep.__name__}: fout {fout.name}")
-        _log.debug(f"{grep.__name__}: ferr {ferr.name}")
-        def readlines(f):
-            lines = f.readlines()
-            line_offset = 0 if fromLine < 1 else fromLine - 1
-            if not lineNumber:
-                lines = [GrepOutput(matched = l, line_offset = line_offset, filepath = path) for l in lines]
-            else:
-                lines = [GrepOutput.from_split(l, line_offset = line_offset, filepath = path) for l in lines]
-            return lines
-        can_be_processed = True
-        if pre_grep_callback:
-            can_be_processed = pre_grep_callback(path)
-        try:
-            if can_be_processed:
-                def _process():
+    def readlines(f):
+        lines = f.readlines()
+        line_offset = 0 if fromLine < 1 else fromLine - 1
+        if not lineNumber:
+            lines = [GrepOutput(matched = l, line_offset = line_offset, filepath = path) for l in lines]
+        else:
+            lines = [GrepOutput.from_split(l, line_offset = line_offset, filepath = path) for l in lines]
+        return lines
+    can_be_processed = True
+    if pre_grep_callback:
+        can_be_processed = pre_grep_callback(path)
+    out = None
+    try:
+        if can_be_processed:
+            def _process():
+                nonlocal out
+                with create_temp_file() as fout, create_temp_file() as ferr:
+                    _log.debug(f"{grep.__name__}: fout {fout.name}")
+                    _log.debug(f"{grep.__name__}: ferr {ferr.name}")
+                    _log.debug(f"{grep.__name__}: {command}")
                     process = subprocess.Popen(command, shell=True, stdout=fout, stderr=ferr)
                     process.wait()
-                if not encapsulate_grep_callback:
-                    _process()
-                else:
-                    encapsulate_grep_callback(_process, path)
-        finally:
-            if post_grep_callback:
-                post_grep_callback(path)
-        if os.path.getsize(ferr.name) > 0:
-            ferr.seek(0)
-            err = readlines(ferr)
-            remove()
-            raise Exception(err)
-        fout.seek(0)
-        out = readlines(fout)
-        return out
+                    if os.path.getsize(ferr.name) > 0:
+                        ferr.seek(0)
+                        err = readlines(ferr)
+                        remove()
+                        raise Exception(err)
+                    fout.seek(0)
+                    out = readlines(fout)
+            if not encapsulate_grep_callback:
+                _process()
+            else:
+                encapsulate_grep_callback(_process, path)
+    finally:
+        if post_grep_callback:
+            post_grep_callback(path)
+    return out
