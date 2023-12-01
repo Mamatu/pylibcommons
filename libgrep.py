@@ -7,6 +7,7 @@ __maintainer__ = "Marcin Matula"
 
 import logging
 from pylibcommons import libkw
+from pylibcommons import libprocess
 from pylibcommons.private.libtemp import create_temp_file
 
 _log = logging.getLogger(__name__)
@@ -151,19 +152,15 @@ def __grep(path, regex, **kwargs):
         if can_be_processed:
             def _process():
                 nonlocal out
-                with create_temp_file() as fout, create_temp_file() as ferr:
-                    _log.debug(f"{grep.__name__}: fout {fout.name}")
-                    _log.debug(f"{grep.__name__}: ferr {ferr.name}")
-                    _log.debug(f"{grep.__name__}: {command}")
-                    process = subprocess.Popen(command, shell=True, stdout=fout, stderr=ferr)
-                    process.wait()
-                    if os.path.getsize(ferr.name) > 0:
-                        ferr.seek(0)
-                        err = readlines(ferr)
-                        remove()
-                        raise Exception(err)
-                    fout.seek(0)
-                    out = readlines(fout)
+                _log.debug(f"{grep.__name__}: {command}")
+                process = libprocess.Process(command, shell = True)
+                process.start()
+                process.wait()
+                err_lines = process.stderr.readlines()
+                if err_lines is not None and len(err_lines) > 0:
+                    raise Exception("\n".join(err_lines))
+                out_lines = process.stdout.readlines()
+                out = out_lines
             if not encapsulate_grep_callback:
                 _process()
             else:
