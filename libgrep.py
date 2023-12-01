@@ -161,8 +161,7 @@ def __grep(path, regex, **kwargs):
                     if err_lines is not None and len(err_lines) > 0:
                         raise Exception("\n".join(err_lines))
                 if process.is_stdout():
-                    out_lines = process.get_stdout().readlines()
-                    out = out_lines
+                    out = readlines(process.get_stdout())
             if not encapsulate_grep_callback:
                 _process()
             else:
