@@ -1,7 +1,6 @@
 import psutil
 import subprocess
 import tempfile
-import telnetlib
 import time
 
 import logging
