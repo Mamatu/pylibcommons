@@ -25,6 +25,10 @@ class Process:
     def start(self):
         self.process = subprocess.Popen(self.cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, universal_newlines = True, shell = self.shell)
         log.info(f"Start process {self.process}")
+    def is_stderr(self):
+        return hasattr(self.process, "stderr")
+    def is_stdout(self):
+        return hasattr(self.process, "stdout")
     def stop(self):
         self.is_destroyed_flag = True
         if not hasattr(self, "process"):
