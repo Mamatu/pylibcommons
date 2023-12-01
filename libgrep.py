@@ -156,11 +156,13 @@ def __grep(path, regex, **kwargs):
                 process = libprocess.Process(command, shell = True)
                 process.start()
                 process.wait()
-                err_lines = process.stderr.readlines()
-                if err_lines is not None and len(err_lines) > 0:
-                    raise Exception("\n".join(err_lines))
-                out_lines = process.stdout.readlines()
-                out = out_lines
+                if process.is_stderr():
+                    err_lines = process.stderr.readlines()
+                    if err_lines is not None and len(err_lines) > 0:
+                        raise Exception("\n".join(err_lines))
+                if process.is_stdout():
+                    out_lines = process.stdout.readlines()
+                    out = out_lines
             if not encapsulate_grep_callback:
                 _process()
             else:
