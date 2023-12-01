@@ -157,11 +157,11 @@ def __grep(path, regex, **kwargs):
                 process.start()
                 process.wait()
                 if process.is_stderr():
-                    err_lines = process.stderr.readlines()
+                    err_lines = process.get_stderr().readlines()
                     if err_lines is not None and len(err_lines) > 0:
                         raise Exception("\n".join(err_lines))
                 if process.is_stdout():
-                    out_lines = process.stdout.readlines()
+                    out_lines = process.get_stdout().readlines()
                     out = out_lines
             if not encapsulate_grep_callback:
                 _process()

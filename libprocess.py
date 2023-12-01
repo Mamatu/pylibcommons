@@ -29,6 +29,14 @@ class Process:
         return hasattr(self.process, "stderr")
     def is_stdout(self):
         return hasattr(self.process, "stdout")
+    def get_stderr(self):
+        if self.process is None:
+            return None
+        return self.process.stderr
+    def get_stdout(self):
+        if self.process is None:
+            return None
+        return self.process.stdout
     def stop(self):
         self.is_destroyed_flag = True
         if not hasattr(self, "process"):
