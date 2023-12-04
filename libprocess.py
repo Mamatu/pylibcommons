@@ -23,7 +23,7 @@ class Process:
         log.warning(f"{ex}: please verify if process {self.cmd} was properly closed")
     def start(self):
         self.process = subprocess.Popen(self.cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, universal_newlines = True, shell = self.shell)
-        log.info(f"Start process {self.process}")
+        log.debug(f"Start process {self.process}")
     def is_stderr(self):
         return hasattr(self.process, "stderr")
     def is_stdout(self):
@@ -52,7 +52,7 @@ class Process:
             self.emit_warning_during_destroy(nsp)
         except subprocess.TimeoutExpired as te: 
             self.emit_warning_during_destroy(te)
-        log.info(f"Stop process {self.process}")
+        log.debug(f"Stop process {self.process}")
     def wait(self):
         if self.process:
             self.process.wait()
