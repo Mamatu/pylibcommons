@@ -4,7 +4,7 @@ import tempfile
 import time
 
 import logging
-log = logging.getLogger("pytorprivoxy")
+log = logging.getLogger(__name__)
 
 from pylibcommons import libprint
 
