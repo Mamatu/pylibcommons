@@ -110,13 +110,24 @@ def __handle_path(path, **kwargs):
         return get_directory_content(path)
     return [path]
 
+def __cat(path):
+    process = libprocess.Process(f"cat {path}", shell = True)
+    process.start()
+    process.wait()
+    if process.is_stdout():
+        lines = process.get_stdout().readlines()
+        content = f"+++\n{path}\n{lines}\n---"
+        print(content)
+
 def __grep(path, regex, **kwargs):
+    print(f"__grep {path}")
     fromLine = libkw.handle_kwargs(["fromLine", "from_line", "n"], default_output = 1, **kwargs)
     maxCount = libkw.handle_kwargs(["maxCount", "max_count", "m"], default_output = -1, **kwargs)
     onlyMatch = libkw.handle_kwargs(["onlyMatch", "only_match", "o"], default_output = False, **kwargs)
     pre_grep_callback = libkw.handle_kwargs(["pre_grep_callback"], default_output = None, **kwargs)
     post_grep_callback = libkw.handle_kwargs(["post_grep_callback"], default_output = None, **kwargs)
     encapsulate_grep_callback = libkw.handle_kwargs(["encapsulate_grep_callback"], default_output = None, **kwargs)
+    debug_cat = libkw.handle_kwargs(["debug_cat"], default_output = False, **kwargs)
     if fromLine < 1:
         raise Exception(f"Invalid fromLine value {fromLine}")
     if maxCount < -1:
@@ -151,8 +162,10 @@ def __grep(path, regex, **kwargs):
     try:
         if can_be_processed:
             def _process():
-                nonlocal out
+                nonlocal out, debug_cat
                 _log.debug(f"{grep.__name__}: {command}")
+                if debug_cat:
+                    __cat(path)
                 process = libprocess.Process(command, shell = True)
                 process.start()
                 process.wait()
