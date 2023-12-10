@@ -70,7 +70,7 @@ class GrepOutput:
         self.matched = rec.search(self.matched)
         return self.matched
     def __str__(self):
-        return f"({self.line_number}, {self.matched})"
+        return f"({self.filepath}:{self.line_number}, {self.matched})"
     @staticmethod
     def from_split(line, line_offset, filepath):
         out = line.split(':', 1)
