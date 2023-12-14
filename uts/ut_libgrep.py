@@ -12,14 +12,14 @@ import os
 def test_handle_directory_1(os_path_isfile, os_listdir_mock):
     os_path_isfile.return_value = True
     os_listdir_mock.return_value = ["1", "10", "2"]
-    assert ["/tmp/1", "/tmp/2", "/tmp/10"] == libgrep.__handle_directory("/tmp/")
+    assert ["/tmp/1", "/tmp/2", "/tmp/10"] == libgrep.get_directory_content("/tmp/")
 
 @patch("os.listdir")
 @patch("os.path.isfile")
 def test_handle_directory_2(os_path_isfile, os_listdir_mock):
     os_path_isfile.return_value = True
     os_listdir_mock.return_value = ["1", "10", "2", "a"]
-    assert ["/tmp/a", "/tmp/1", "/tmp/2", "/tmp/10"] == libgrep.__handle_directory("/tmp/")
+    assert ["/tmp/a", "/tmp/1", "/tmp/2", "/tmp/10"] == libgrep.get_directory_content("/tmp/")
 
 def test_grep_in_directory_line1():
     data = {}
