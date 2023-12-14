@@ -110,14 +110,14 @@ def __handle_path(path, **kwargs):
         return get_directory_content(path)
     return [path]
 
-def __cat(path):
+def __cat(command, path):
     process = libprocess.Process(f"cat {path}", shell = True)
     process.start()
     process.wait()
     if process.is_stdout():
         lines = process.get_stdout().readlines()
-        content = f"+++\n{path}\n{lines}\n---"
-        print(content)
+        content = f"\n{command} {path}\n+++\n{lines}\n---"
+        _log.info(content)
 
 def __grep(path, regex, **kwargs):
     print(f"__grep {path}")
@@ -165,7 +165,7 @@ def __grep(path, regex, **kwargs):
                 nonlocal out, debug_cat
                 _log.debug(f"{grep.__name__}: {command}")
                 if debug_cat:
-                    __cat(path)
+                    __cat(command, path)
                 process = libprocess.Process(command, shell = True)
                 process.start()
                 process.wait()
