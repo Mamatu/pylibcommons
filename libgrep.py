@@ -116,7 +116,7 @@ def __cat(command, path):
     process.wait()
     if process.is_stdout():
         lines = process.get_stdout().readlines()
-        content = f"\n{command} {path}\n+++\n{lines}\n---"
+        content = f"\n|{command} {path}|\n+++\n{lines}\n---"
         _log.info(content)
 
 def __grep(path, regex, **kwargs):
@@ -175,6 +175,8 @@ def __grep(path, regex, **kwargs):
                         raise Exception("\n".join(err_lines))
                 if process.is_stdout():
                     out = readlines(process.get_stdout())
+                if debug_cat:
+                    _log.info(f"{[str(o) for o in out]}")
             if not encapsulate_grep_callback:
                 _process()
             else:
