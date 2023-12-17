@@ -102,7 +102,7 @@ def __try_convert_to_int(f):
 
 def __handle_path(path, **kwargs):
     if not os.path.exists(path):
-        raise Exception(f"Path {path} doesn't exist")
+        raise FileNotFoundError(f"Path {path} doesn't exist")
     support_directory = libkw.handle_kwargs(["support_directory", "supportDirectory"], False, **kwargs)
     if not support_directory and os.path.isdir(path):
         raise Exception(f"Path {path} is directory - it is not supported. If should be, please use supportDirectory or support_directory = True argument")
