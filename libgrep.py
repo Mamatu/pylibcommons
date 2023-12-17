@@ -116,7 +116,8 @@ def __cat(command, path):
     process.wait()
     if process.is_stdout():
         lines = process.get_stdout().readlines()
-        content = f"\n|{command} {path}|\n+++\n{lines}\n---"
+        prefix = "[__cat]"
+        content = f"{prefix} \n{prefix} |{command} {path}|\n{prefix} +++\n{prefix} {lines}\n{prefix} ---"
         _log.info(content)
 
 def __grep(path, regex, **kwargs):
