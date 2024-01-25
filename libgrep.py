@@ -149,7 +149,6 @@ def __grep(path, regex, **kwargs):
         raise Exception("Grep command was failed on initialization")
     def readlines(f):
         lines = f.readlines()
-        print(f"readlines: {f} {lines}")
         line_offset = 0 if fromLine < 1 else fromLine - 1
         if not lineNumber:
             lines = [GrepOutput(matched = l, line_offset = line_offset, filepath = path) for l in lines]
