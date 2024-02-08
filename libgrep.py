@@ -44,7 +44,7 @@ def grep_regex_in_line(path, grep_regex, match_regex, **kwargs):
     rec = re.compile(match_regex)
     matched_lines = []
     for o in out:
-        matched = o.search_in_matched(rec)
+        matched = o.search_in_matched(rec, replace_self_matched = True)
         if matched:
             matched_lines.append(o)
     return matched_lines
@@ -66,9 +66,11 @@ class GrepOutput:
         if idx == 1:
             return self.matched
         raise IndexError
-    def search_in_matched(self, rec):
-        self.matched = rec.search(self.matched)
-        return self.matched
+    def search_in_matched(self, rec, replace_self_matched = False):
+        matched = rec.search(self.matched)
+        if replace_self_matched:
+            self.matched = matched
+        return matched
     def __str__(self):
         return f"({self.filepath}:{self.line_number}, {self.matched})"
     @staticmethod
