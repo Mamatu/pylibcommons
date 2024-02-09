@@ -12,6 +12,9 @@ from pylibcommons.private.libtemp import create_temp_file
 
 _log = logging.getLogger(__name__)
 
+class FileNotEqualException(Exception):
+    pass
+
 def grep(path, regex, **kwargs):
     path = __handle_path(path, **kwargs)
     outputs = []
@@ -85,27 +88,52 @@ class GrepOutput:
         out = line.split(':', 1)
         return GrepOutput(out[0], out[1], line_offset, filepath)
     def get_file_line_number(self):
-        if self.file_number is None:
-            raise Exception(f"File number is None for {self.filepath}")
         class FileLineNumber:
-            def __init__(self, file_number, line_number):
+            def __init__(self, file_path, file_number, line_number):
+                self.file_path = file_path
                 self.file_number = file_number
                 self.line_number = line_number
+            @staticmethod
+            def check_filepath(self, other):
+                if self.file_path != other.file_path:
+                    raise FileNotEqualException(f"File path {self.file_path} is different than {other.file_path}")
             def __str__(self):
                 return f"{self.file_number}:{self.line_number}"
             def __repr__(self):
                 return f"{self.file_number}:{self.line_number}"
             def __eq__(self, other):
+                if other is None:
+                    return False
+                _eq = lambda self, other: self.line_number == other.line_number
+                if self.file_number is None and other.file_number is None:
+                    FileLineNumber.check_filepath(self, other)
+                    return self.line_number == other.line_number
                 return self.file_number == other.file_number and self.line_number == other.line_number
             def __gt__(self, other):
-                return self.file_number > other.file_number or (self.file_number == other.file_number and self.line_number > other.line_number)
+                _gt = lambda self, other: self.line_number > other.line_number
+                if self.file_number is None or other.file_number is None:
+                    FileLineNumber.check_filepath(self, other)
+                    return _gt(self, other)
+                return self.file_number > other.file_number or _gt(self, other)
             def __lt__(self, other):
-                return self.file_number < other.file_number or (self.file_number == other.file_number and self.line_number < other.line_number)
+                _lt = lambda self, other: self.line_number < other.line_number
+                if self.file_number is None or other.file_number is None:
+                    FileLineNumber.check_filepath(self, other)
+                    return _lt(self, other)
+                return self.file_number < other.file_number or _lt(self, other)
             def __ge__(self, other):
-                return self.file_number >= other.file_number or (self.file_number == other.file_number and self.line_number >= other.line_number)
+                _ge = lambda self, other: self.line_number >= other.line_number
+                if self.file_number is None or other.file_number is None:
+                    FileLineNumber.check_filepath(self, other)
+                    return _ge(self, other)
+                return self.file_number >= other.file_number or _ge(self, other)
             def __le__(self, other):
-                return self.file_number <= other.file_number or (self.file_number == other.file_number and self.line_number <= other.line_number)
-        return FileLineNumber(self.file_number, self.line_number)
+                _le = lambda self, other: self.line_number <= other.line_number
+                if self.file_number is None or other.file_number is None:
+                    FileLineNumber.check_filepath(self, other)
+                    return _le(self, other)
+                return self.file_number <= other.file_number or _le(self, other)
+        return FileLineNumber(self.filepath, self.file_number, self.line_number)
 
 import os
 
