@@ -60,6 +60,11 @@ class GrepOutput:
                 raise ex
         self.matched = matched.rstrip()
         self.filepath = filepath
+        self.file_number = os.path.basename(self.filepath)
+        try:
+            self.file_number = int(self.file_number)
+        except ValueError:
+            self.file_number = None
     def __getitem__(self, idx):
         if idx == 0:
             return self.line_number
@@ -79,6 +84,28 @@ class GrepOutput:
     def from_split(line, line_offset, filepath):
         out = line.split(':', 1)
         return GrepOutput(out[0], out[1], line_offset, filepath)
+    def get_file_line_number(self):
+        if self.file_number is None:
+            raise Exception(f"File number is None for {self.filepath}")
+        class FileLineNumber:
+            def __init__(self, file_number, line_number):
+                self.file_number = file_number
+                self.line_number = line_number
+            def __str__(self):
+                return f"{self.file_number}:{self.line_number}"
+            def __repr__(self):
+                return f"{self.file_number}:{self.line_number}"
+            def __eq__(self, other):
+                return self.file_number == other.file_number and self.line_number == other.line_number
+            def __gt__(self, other):
+                return self.file_number > other.file_number or (self.file_number == other.file_number and self.line_number > other.line_number)
+            def __lt__(self, other):
+                return self.file_number < other.file_number or (self.file_number == other.file_number and self.line_number < other.line_number)
+            def __ge__(self, other):
+                return self.file_number >= other.file_number or (self.file_number == other.file_number and self.line_number >= other.line_number)
+            def __le__(self, other):
+                return self.file_number <= other.file_number or (self.file_number == other.file_number and self.line_number <= other.line_number)
+        return FileLineNumber(self.file_number, self.line_number)
 
 import os
 
