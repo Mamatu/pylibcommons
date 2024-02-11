@@ -74,6 +74,11 @@ class GrepOutput:
         if idx == 1:
             return self.matched
         raise IndexError
+    def search_in_matched_by_grep(self, regex, replace_self_matched = False):
+        output = grep_in_text(self.matched, regex)
+        if len(output) == 0:
+            return False
+        return True
     def search_in_matched(self, rec, replace_self_matched = False):
         matched = rec.search(self.matched)
         if replace_self_matched:
