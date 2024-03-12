@@ -65,8 +65,10 @@ class Process:
             return
         if self.process is None:
             return
-        self.process.stdout.close()
-        self.process.stderr.close()
+        if self.process.stdout:
+            self.process.stdout.close()
+        if self.process.stderr:
+            self.process.stderr.close()
         try:
             import libterminate
             libterminate.terminate_process_and_children(self.process)
