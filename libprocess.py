@@ -13,8 +13,6 @@ class Process:
     log = log.getChild(__name__)
     def __init__(self, cmd, use_temp_file = True, shell = True):
         self.is_destroyed_flag = False
-        import threading
-        self.lock = threading.Lock()
         self.cmd = cmd
         self.process = None
         self.use_temp_file = use_temp_file
@@ -67,8 +65,10 @@ class Process:
             return
         if self.process is None:
             return
-        self.process.stdout.close()
-        self.process.stderr.close()
+        if self.process.stdout:
+            self.process.stdout.close()
+        if self.process.stderr:
+            self.process.stderr.close()
         try:
             import libterminate
             libterminate.terminate_process_and_children(self.process)
