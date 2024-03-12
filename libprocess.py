@@ -13,8 +13,6 @@ class Process:
     log = log.getChild(__name__)
     def __init__(self, cmd, use_temp_file = True, shell = True):
         self.is_destroyed_flag = False
-        import threading
-        self.lock = threading.Lock()
         self.cmd = cmd
         self.process = None
         self.use_temp_file = use_temp_file
