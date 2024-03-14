@@ -24,7 +24,12 @@ def test_connection(mocker):
         return libserver.StopExecution()
     handler = mocker.Mock()
     handler.side_effect = _handler
-    server = libserver.run(handler, 7000, server_before_accept = lambda: libclient.send("test", 7000))
+    def server_before_accept():
+        libprint.print_func_info(prefix = "+", logger = log.debug)
+        client = libclient.create(7000)
+        client.write("test")
+        libprint.print_func_info(prefix = "-", logger = log.debug)
+    server = libserver.run(handler, 7000, server_before_accept = server_before_accept)
     server.wait_for_finish()
     handler.assert_called_once()
     libprint.print_func_info(prefix = "-", logger = log.debug)
