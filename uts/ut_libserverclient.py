@@ -9,27 +9,29 @@ import datetime
 import logging
 import os
 
-from pylibcommons import libprint, libgrep, libserver, libclient
+from pylibcommons import libprint, libgrep, libserver
+from multiprocessing.connection import Client
 
 import pytest
 import re
+
+from time import sleep
 
 log = logging.getLogger(__name__)
 
 def test_connection(mocker):
     libprint.print_func_info(prefix = "+", logger = log.debug)
-    def _handler(line):
+    def _handler(line, client):
         assert line == "test"
         libprint.print_func_info(prefix = "+", logger = log.debug)
         return libserver.StopExecution()
     handler = mocker.Mock()
     handler.side_effect = _handler
-    def server_before_accept():
-        libprint.print_func_info(prefix = "+", logger = log.debug)
-        client = libclient.create(7000)
-        client.write("test")
-        libprint.print_func_info(prefix = "-", logger = log.debug)
-    server = libserver.run(handler, 7000, server_before_accept = server_before_accept)
+    server = libserver.run(handler, ("localhost", 7000))
+    client = Client(("localhost", 7000))
+    client.send("test")
+    sleep(1)
+    server.stop()
     server.wait_for_finish()
     handler.assert_called_once()
     libprint.print_func_info(prefix = "-", logger = log.debug)
