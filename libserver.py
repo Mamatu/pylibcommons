@@ -52,6 +52,8 @@ class _Server:
                         if isinstance(output, StopExecution) or output == StopExecution:
                             libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"Stop execution")
                             return
+                except EOFError as eof:
+                    libprint.print_func_info(prefix = "*", logger = log.error, extra_string = f"{eof}")
                 finally:
                     conn.close()
             with concurrent.ThreadPoolExecutor() as executor:
