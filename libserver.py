@@ -42,20 +42,22 @@ class _Server:
             def call(callback):
                 if callback is not None and callable(callback):
                     callback()
-            def thread_client(conn, self):
+            def thread_client(client, self):
+                libprint.print_func_info(prefix = "+", logger = log.debug, extra_string = f"{client}")
                 try:
                     while not self.stopped:
-                        libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "+conn.recv")
-                        line = conn.recv()
-                        libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "-conn.recv")
-                        output = handler(line, conn)
+                        libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"+client {client}.recv")
+                        line = client.recv()
+                        libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"-client {client}.recv")
+                        output = handler(line, client)
                         if isinstance(output, StopExecution) or output == StopExecution:
                             libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"Stop execution")
                             return
                 except EOFError as eof:
                     libprint.print_func_info(prefix = "*", logger = log.error, extra_string = f"{eof}")
                 finally:
-                    conn.close()
+                    client.close()
+                    libprint.print_func_info(prefix = "-", logger = log.debug, extra_string = f"{client}")
             with concurrent.ThreadPoolExecutor() as executor:
                 futures = []
                 while not self.stopped:
