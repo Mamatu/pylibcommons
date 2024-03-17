@@ -19,12 +19,12 @@ class _Server:
         self.lock = threading.Lock()
         self.cv = threading.Condition(self.lock)
         self.address = address
+        self.stopped = False
         from multiprocessing.connection import Listener
         self.listener = Listener(address)
         self.thread = threading.Thread(target = _Server.run_server, args = [self, handler, address])
         self.thread.daemon = True
         self.thread.start()
-        self.stopped = False
         libprint.print_func_info(prefix = "-", logger = log.debug)
     def stop(self):
         self.stopped = True
