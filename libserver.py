@@ -47,7 +47,12 @@ class _Server:
                 try:
                     while not self.stopped:
                         libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"+client {client}.recv")
-                        line = client.recv()
+                        line = None
+                        try:
+                            line = client.recv()
+                        except EOFError as eof:
+                            libprint.print_func_info(prefix = "*", logger = log.info, extra_string = f"Received eof: {eof}")
+                            return
                         libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"-client {client}.recv")
                         output = handler(line, client)
                         if isinstance(output, StopExecution) or output == StopExecution:
