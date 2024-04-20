@@ -1,6 +1,6 @@
-def create_temp_file(mode = "w+", data = None):
+def create_temp_file(mode = "w+", data = None, delete = True):
     import tempfile
-    f = tempfile.NamedTemporaryFile(mode = mode)
+    f = tempfile.NamedTemporaryFile(mode = mode, delete = delete)
     if data and "w" in mode:
         f.write(data)
         f.flush()
