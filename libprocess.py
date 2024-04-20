@@ -41,7 +41,7 @@ class Process:
     def _start_temp_files(self):
         self.fout = libtemp.create_temp_file(delete = self.delete_log_file)
         self.ferr = libtemp.create_temp_file(delete = self.delete_log_file)
-        libprint.print_func_info(logger = log.info, extra_string = f"File stdout: {self.fout.name}, stderr: {self.ferr.name}")
+        libprint.print_func_info(logger = log.info, extra_string = f"Cmd {self.cmd} files stdout: {self.fout.name}, stderr: {self.ferr.name}")
         process = subprocess.Popen(self.cmd, stdout = self.fout, stderr = self.ferr, universal_newlines = True, shell = self.shell)
         return process
     def is_stderr(self):
