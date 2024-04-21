@@ -129,6 +129,7 @@ def get_func_args(**kwargs):
 def convert_args_to_str(**kwargs):
     level = libkw.handle_kwargs("level", default_output = 1, **kwargs)
     args = libkw.handle_kwargs("args", default_output = None, **kwargs)
+    args_chars_limit = libkw.handle_kwargs("args_chars_limit", default_output = None, **kwargs)
     if args is None:
         args = get_func_args(level = level + 1)
     for arg in args:
@@ -152,6 +153,11 @@ def convert_args_to_str(**kwargs):
                 arg = str(arg)
         args[idx] = arg
     args = map(lambda arg: str(arg), args)
+    args = list(args)
+    if args_chars_limit is not None:
+        for arg in args:
+            if len(arg) > args_chars_limit:
+                args[args.index(arg)] = f"{arg[:args_chars_limit]}..."
     return ", ".join(args)
 
 def get_func_info(**kwargs):
