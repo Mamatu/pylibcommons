@@ -34,7 +34,7 @@ def class_debug_prints(**kwargs):
                 inner_kwargs["filename"] = filename_lineno[0]
                 inner_kwargs["lineno"] = filename_lineno[1]
                 inner_kwargs["function_name"] = orig_method.__name__
-                inner_kwargs["args"] = convert_args_to_str(level = 1)
+                inner_kwargs["args"] = convert_args_to_str(level = 1, **kwargs)
                 print_func_info(**inner_kwargs, prefix = prefix)
                 try:
                     return func(self, *args, **kwargs)
@@ -170,7 +170,9 @@ def get_func_info(**kwargs):
     prefix = libkw.handle_kwargs("prefix", default_output = None, **kwargs)
     args = libkw.handle_kwargs("args", default_output = None, **kwargs)
     if args is None:
-        args = convert_args_to_str(level = level + 1)
+        kwargs_1 = kwargs.copy()
+        kwargs_1["level"] = level + 1
+        args = convert_args_to_str(**kwargs_1)
     if function_name is None:
         function_name = get_function_name(level = level + 1)
     output = f"{function_name} ({args})"
