@@ -5,18 +5,12 @@ __license__ = "Apache License"
 __version__ = "2.0"
 __maintainer__ = "Marcin Matula"
 
-import datetime
-import logging
-import os
-
-from pylibcommons import libprint, libgrep, libserver
+from pylibcommons import libprint, libserver
 from multiprocessing.connection import Client
-
-import pytest
-import re
 
 from time import sleep
 
+import logging
 log = logging.getLogger(__name__)
 
 def test_connection(mocker):
