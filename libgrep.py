@@ -109,7 +109,6 @@ class GrepOutput:
             def __eq__(self, other):
                 if other is None:
                     return False
-                _eq = lambda self, other: self.line_number == other.line_number
                 if self.file_number is None and other.file_number is None:
                     FileLineNumber.check_filepath(self, other)
                     return self.line_number == other.line_number
@@ -202,7 +201,6 @@ def __grep(path, regex, **kwargs):
         n_arg = " -n" if lineNumber else ""
         m_arg = " -m {maxCount}" if maxCount > -1 else ""
         return f"{o_arg}{n_arg}{m_arg}"
-    import subprocess, os
     args = makeArgs(lineNumber, maxCount)
     command = f"grep -a {args} -e \"{regex}\""
     if fromLine > 1:

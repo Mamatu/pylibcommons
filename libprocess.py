@@ -1,12 +1,8 @@
 import psutil
 import subprocess
-import tempfile
-import time
 
 import logging
 log = logging.getLogger(__name__)
-
-import libprint
 
 from pylibcommons import libprint
 from pylibcommons.private import libtemp

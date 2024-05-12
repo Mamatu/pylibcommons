@@ -6,7 +6,6 @@ __version__ = "2.0"
 __maintainer__ = "Marcin Matula"
 
 import inspect
-import logging
 
 def verify_parameters(func, expected_args):
     def get_args(func):

@@ -1,6 +1,5 @@
-from pylibcommons import libprint, libprocess, libkw
+from pylibcommons import libprint
 import logging
-import os
 import threading
 
 log = logging.getLogger(__name__)
@@ -56,7 +55,7 @@ class _Server:
                         libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"-client {client}.recv")
                         output = handler(line, client)
                         if isinstance(output, StopExecution) or output == StopExecution:
-                            libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"Stop execution")
+                            libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "Stop execution")
                             return
                 except EOFError as eof:
                     libprint.print_func_info(prefix = "*", logger = log.error, extra_string = f"{eof}")

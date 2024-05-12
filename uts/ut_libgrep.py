@@ -1,8 +1,6 @@
 from pylibcommons import libgrep
 from pylibcommons.private.libtemp import create_temp_file, create_temp_dir
 
-from unittest import TestCase
-from unittest.mock import Mock
 from unittest.mock import patch
 
 import pytest
@@ -209,7 +207,7 @@ def test_grep_line_regex_with_line_number():
     assert "2021-12-19 17:59:17.172" == out[0].matched[0]
     assert len(out) == 1
 
-def test_grep_line_regex_with_line_two_lines():
+def test_grep_line_regex_with_line_two_lines_1():
     test_file = create_temp_file()
     testfile_path = test_file.name
     with open(testfile_path, "w") as f:

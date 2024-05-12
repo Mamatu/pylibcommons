@@ -5,7 +5,6 @@ __license__ = "Apache License"
 __version__ = "2.0"
 __maintainer__ = "Marcin Matula"
 
-import copy
 import inspect
 from pylibcommons import libkw
 
