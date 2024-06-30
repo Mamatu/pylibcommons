@@ -9,7 +9,7 @@ from pylibcommons.private import libtemp
 
 class Process:
     log = log.getChild(__name__)
-    def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True):
+    def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True, exception_on_error = False, check_error_timeout = 0.01):
         self.is_destroyed_flag = False
         self.cmd = cmd
         self.process = None
@@ -21,6 +21,10 @@ class Process:
         self.fout = None
         self.ferr = None
         self.timeout = timeout
+        self.exception_on_error = exception_on_error
+        self.check_error_timeout = check_error_timeout
+        if not isinstance(self.check_error_timeout, float):
+            raise Exception("check_error_timeout must be a float")
     def was_stopped(self):
         return self.is_destroyed_flag
     def emit_warning_during_destroy(self, ex):
@@ -82,8 +86,17 @@ class Process:
             self.emit_warning_during_destroy(te)
         libprint.print_func_info(logger = log.debug, extra_string = f"Stop process {self.process}")
     def wait(self):
-        if self.process:
+        if self.process and not self.exception_on_error:
             self.process.wait()
+        elif self.process and self.exception_on_error:
+            while True:
+                self.process.wait(timeout = self.check_error_timeout)
+                if self.is_stderr():
+                    _stderr = self.get_stderr()
+                    lines = _stderr.readlines()
+                    if len(lines) > 0:
+                        self.stop()
+                        raise Exception(f"Error in process {self.cmd}: {lines}")
 
 def make(cmd, delete_log_file = True):
     return Process(cmd, delete_log_file = delete_log_file)
