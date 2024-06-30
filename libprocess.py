@@ -90,7 +90,10 @@ class Process:
             self.process.wait()
         elif self.process and self.exception_on_error:
             while True:
-                self.process.wait(timeout = self.check_error_timeout)
+                try:
+                    self.process.wait(timeout = self.check_error_timeout)
+                except subprocess.TimeoutExpired:
+                    pass
                 if self.is_stderr():
                     _stderr = self.get_stderr()
                     lines = _stderr.readlines()
