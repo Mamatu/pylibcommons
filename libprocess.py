@@ -30,7 +30,8 @@ class Process:
     def emit_warning_during_destroy(self, ex):
         libprint.print_func_info(logger = log.warn, extra_string = f"{ex}: please verify if process {self.cmd} was properly closed")
     def start(self):
-        self.process = None
+        if self.process:
+            raise Exception(f"Process {self.cmd} already started {self.process}")
         if self.use_temp_file:
             self.process = self._start_temp_files()
         else:
