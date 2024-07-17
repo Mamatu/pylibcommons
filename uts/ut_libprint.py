@@ -116,3 +116,26 @@ def test_get_func_args_4():
         args = libprint.convert_args_to_str(args = args)
         assert 'alpha = 1, beta = [0, 0, 1]' == args
     foo(1,  beta = [0, 0, 1])
+
+from contextlib import contextmanager
+import datetime
+
+from unittest.mock import patch
+
+# Source: https://stackoverflow.com/a/46919967
+@contextmanager
+def mocked_now(now):
+    class MockedDatetime(datetime.datetime):
+        @classmethod
+        def now(cls):
+            return now
+    with patch("datetime.datetime", MockedDatetime):
+        yield
+
+def test_print_func_info_with_current_time_1(capsys):
+    with mocked_now(datetime.datetime(2022, 1, 29, hour = 20, minute = 54, second = 54, microsecond = 000000)):
+        def foo(alpha, *args, **kwargs):
+            libprint.print_func_info(print_filename_and_linenumber_of_call = False, print_current_time = True)
+        foo(1, 4, 5,  beta = 2, gamma = 3)
+        captured = capsys.readouterr()
+        assert "2022-01-29 20:54:54.000000 foo (alpha = 1, 4, 5, beta = 2, gamma = 3)\n" == captured.out
