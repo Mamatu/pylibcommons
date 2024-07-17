@@ -8,6 +8,8 @@ __maintainer__ = "Marcin Matula"
 import inspect
 from pylibcommons import libkw
 
+import datetime
+
 def print_func_info(**kwargs):
     level = libkw.handle_kwargs("level", default_output = 1, **kwargs)
     logger = libkw.handle_kwargs("logger", default_output = print, **kwargs)
@@ -168,13 +170,19 @@ def get_func_info(**kwargs):
     lineno = libkw.handle_kwargs("lineno", default_output = None, **kwargs)
     prefix = libkw.handle_kwargs("prefix", default_output = None, **kwargs)
     args = libkw.handle_kwargs("args", default_output = None, **kwargs)
+    print_current_time = libkw.handle_kwargs("print_current_time", default_output = False, **kwargs)
+    ct = ""
+    if print_current_time:
+        ct = datetime.datetime.now()
+        ct = ct.strftime("%Y-%m-%d %H:%M:%S.%f")
+        ct = f"{ct} "
     if args is None:
         kwargs_1 = kwargs.copy()
         kwargs_1["level"] = level + 1
         args = convert_args_to_str(**kwargs_1)
     if function_name is None:
         function_name = get_function_name(level = level + 1)
-    output = f"{function_name} ({args})"
+    output = f"{ct}{function_name} ({args})"
     filename_lineno = get_filename_lineno(level = level + 1)
     if file_name is not None:
         filename_lineno.set_filename(file_name)
