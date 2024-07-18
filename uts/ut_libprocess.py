@@ -17,7 +17,7 @@ import os
 def test_process_with_exception():
     uts_path = pathlib.Path(__file__).parent.resolve()
     path = os.path.join(uts_path, "data/ut_libprocess/data_no_existed.txt")
-    process = libprocess.Process(f"grep 'text' {path}", exception_on_error=True)
+    process = libprocess.Process(f"grep 'text' {path}")
     process.start()
     with pytest.raises(Exception):
-        process.wait()
+        process.wait(exception_on_error=True)

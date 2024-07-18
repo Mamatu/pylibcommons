@@ -9,7 +9,7 @@ from pylibcommons.private import libtemp
 
 class Process:
     log = log.getChild(__name__)
-    def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True, exception_on_error = False, check_error_timeout = 0.01):
+    def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True, check_error_timeout = 0.01):
         self.is_destroyed_flag = False
         self.cmd = cmd
         self.process = None
@@ -21,7 +21,6 @@ class Process:
         self.fout = None
         self.ferr = None
         self.timeout = timeout
-        self.exception_on_error = exception_on_error
         self.check_error_timeout = check_error_timeout
         if not isinstance(self.check_error_timeout, float):
             raise Exception("check_error_timeout must be a float")
@@ -86,13 +85,13 @@ class Process:
         except subprocess.TimeoutExpired as te: 
             self.emit_warning_during_destroy(te)
         libprint.print_func_info(logger = log.debug, extra_string = f"Stop process {self.process}")
-    def wait(self):
+    def wait(self, exception_on_error = False, print_log_on_error = False):
         libprint.print_func_info(logger = log.debug, print_current_time = True)
         try:
-            if self.process and not self.exception_on_error:
+            if self.process and not exception_on_error and not print_log_on_error:
                 libprint.print_func_info(logger = log.debug)
                 self.process.wait()
-            elif self.process and self.exception_on_error:
+            elif self.process and (exception_on_error or print_log_on_error):
                 while True:
                     try:
                         libprint.print_func_info(logger = log.debug)
@@ -103,8 +102,11 @@ class Process:
                         _stderr = self.get_stderr()
                         lines = _stderr.readlines()
                         if len(lines) > 0:
-                            self.stop()
-                            raise Exception(f"Error in process {self.cmd}: {lines}")
+                            if exception_on_error:
+                                self.stop()
+                                raise Exception(f"Error in process {self.cmd}: {lines}")
+                            elif print_log_on_error:
+                                libprint.print_func_info(logger = log.error, extra_string = f"{lines}")
         finally:
             libprint.print_func_info(logger = log.debug, print_current_time = True)
 
