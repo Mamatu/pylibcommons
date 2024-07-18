@@ -87,20 +87,26 @@ class Process:
             self.emit_warning_during_destroy(te)
         libprint.print_func_info(logger = log.debug, extra_string = f"Stop process {self.process}")
     def wait(self):
-        if self.process and not self.exception_on_error:
-            self.process.wait()
-        elif self.process and self.exception_on_error:
-            while True:
-                try:
-                    self.process.wait(timeout = self.check_error_timeout)
-                except subprocess.TimeoutExpired:
-                    pass
-                if self.is_stderr():
-                    _stderr = self.get_stderr()
-                    lines = _stderr.readlines()
-                    if len(lines) > 0:
-                        self.stop()
-                        raise Exception(f"Error in process {self.cmd}: {lines}")
+        libprint.print_func_info(logger = log.debug, print_current_time = True)
+        try:
+            if self.process and not self.exception_on_error:
+                libprint.print_func_info(logger = log.debug)
+                self.process.wait()
+            elif self.process and self.exception_on_error:
+                while True:
+                    try:
+                        libprint.print_func_info(logger = log.debug)
+                        self.process.wait(timeout = self.check_error_timeout)
+                    except subprocess.TimeoutExpired:
+                        pass
+                    if self.is_stderr():
+                        _stderr = self.get_stderr()
+                        lines = _stderr.readlines()
+                        if len(lines) > 0:
+                            self.stop()
+                            raise Exception(f"Error in process {self.cmd}: {lines}")
+        finally:
+            libprint.print_func_info(logger = log.debug, print_current_time = True)
 
 def make(cmd, delete_log_file = True):
     return Process(cmd, delete_log_file = delete_log_file)
