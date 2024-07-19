@@ -18,3 +18,7 @@ def terminate_process_and_children(process):
     except subprocess.TimeoutExpired:
         process.kill()
         process.wait(timeout = 1)
+    if process and hasattr(process, "stdout") and process.stdout:
+        process.stdout.close()
+    if process and hasattr(process, "stderr") and process.stderr:
+        process.stderr.close()

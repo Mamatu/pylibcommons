@@ -5,11 +5,12 @@ import logging
 log = logging.getLogger(__name__)
 
 from pylibcommons import libprint
+from pylibcommons import libkw
 from pylibcommons.private import libtemp
 
 class Process:
     log = log.getChild(__name__)
-    def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True, check_error_timeout = 0.01):
+    def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True):
         self.is_destroyed_flag = False
         self.cmd = cmd
         self.process = None
@@ -21,9 +22,6 @@ class Process:
         self.fout = None
         self.ferr = None
         self.timeout = timeout
-        self.check_error_timeout = check_error_timeout
-        if not isinstance(self.check_error_timeout, float):
-            raise Exception("check_error_timeout must be a float")
     def was_stopped(self):
         return self.is_destroyed_flag
     def emit_warning_during_destroy(self, ex):
@@ -67,15 +65,15 @@ class Process:
             return None
         return self.process.stdout
     def stop(self):
+        libprint.print_func_info(logger = log.debug, extra_string = f"Stop process {self.process}")
         self.is_destroyed_flag = True
         if not hasattr(self, "process"):
             return
         if self.process is None:
             return
-        if self.process.stdout:
-            self.process.stdout.close()
-        if self.process.stderr:
-            self.process.stderr.close()
+        self.cleanup()
+    def cleanup(self):
+        libprint.print_func_info(logger = log.debug, extra_string = f"Cleanup process {self.process}")
         try:
             import libterminate
             libterminate.terminate_process_and_children(self.process)
@@ -84,29 +82,48 @@ class Process:
             self.emit_warning_during_destroy(nsp)
         except subprocess.TimeoutExpired as te: 
             self.emit_warning_during_destroy(te)
-        libprint.print_func_info(logger = log.debug, extra_string = f"Stop process {self.process}")
-    def wait(self, exception_on_error = False, print_log_on_error = False):
+    def wait(self, **kwargs):
         libprint.print_func_info(logger = log.debug, print_current_time = True)
+        exception_on_error = libkw.handle_kwargs("exception_on_error", default_output = False, **kwargs)
+        print_stdout = libkw.handle_kwargs("print_stdout", default_output = False, **kwargs)
+        print_stderr = libkw.handle_kwargs("print_stderr", default_output = False, **kwargs)
+        check_error_timeout = libkw.handle_kwargs("check_error_timeout", default_output = 0, **kwargs)
+        def handle_stderr(self):
+            nonlocal exception_on_error, print_stderr
+            if not exception_on_error and not print_stderr:
+                return
+            if self.is_stderr():
+                _stderr = self.get_stderr()
+                lines = _stderr.readlines()
+                if len(lines) > 0:
+                    if exception_on_error:
+                        self.stop()
+                        raise Exception(f"Error in process {self.cmd}: {lines}")
+                    elif print_stderr:
+                        libprint.print_func_info(logger = log.error, extra_string = f"{lines}")
+        def handle_stdout(self):
+            nonlocal print_stdout
+            if not print_stdout:
+                return
+            if self.is_stdout():
+                _stdout = self.get_stdout()
+                lines = _stdout.readlines()
+                if len(lines) > 0:
+                    libprint.print_func_info(logger = log.info, extra_string = f"{lines}")
         try:
-            if self.process and not exception_on_error and not print_log_on_error:
-                libprint.print_func_info(logger = log.debug)
+            if self.process and check_error_timeout == 0:
                 self.process.wait()
-            elif self.process and (exception_on_error or print_log_on_error):
+                handle_stderr(self)
+                handle_stdout(self)
+            elif self.process and check_error_timeout > 0:
                 while True:
                     try:
                         libprint.print_func_info(logger = log.debug)
-                        self.process.wait(timeout = self.check_error_timeout)
+                        self.process.wait(timeout = check_error_timeout)
                     except subprocess.TimeoutExpired:
                         pass
-                    if self.is_stderr():
-                        _stderr = self.get_stderr()
-                        lines = _stderr.readlines()
-                        if len(lines) > 0:
-                            if exception_on_error:
-                                self.stop()
-                                raise Exception(f"Error in process {self.cmd}: {lines}")
-                            elif print_log_on_error:
-                                libprint.print_func_info(logger = log.error, extra_string = f"{lines}")
+                    handle_stderr(self)
+                    handle_stdout(self)
         finally:
             libprint.print_func_info(logger = log.debug, print_current_time = True)
 
