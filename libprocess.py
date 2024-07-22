@@ -42,6 +42,8 @@ class Process:
         libprint.print_func_info(logger = log.debug, extra_string = f"Cmd {self.cmd} files stdout: {self.fout.name}, stderr: {self.ferr.name}")
         process = subprocess.Popen(self.cmd, stdout = self.fout, stderr = self.ferr, universal_newlines = True, shell = self.shell)
         return process
+    def get_out_file_path(self):
+        return self.fout.
     def is_stderr(self):
         if self.ferr is not None:
             return True
@@ -94,6 +96,7 @@ class Process:
                 return
             if self.is_stderr():
                 _stderr = self.get_stderr()
+                _stderr.seek(0)
                 lines = _stderr.readlines()
                 if len(lines) > 0:
                     lines = "".join(lines)
@@ -108,6 +111,7 @@ class Process:
                 return
             if self.is_stdout():
                 _stdout = self.get_stdout()
+                _stdout.seek(0)
                 lines = _stdout.readlines()
                 if len(lines) > 0:
                     lines = "".join(lines)

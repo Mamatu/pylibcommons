@@ -21,3 +21,20 @@ def test_process_with_exception():
     process.start()
     with pytest.raises(Exception):
         process.wait(exception_on_error=True)
+
+def test_process_stdout_and_stderr_1(capsys):
+    def get(stream):
+        out = stream
+        out = out.split("\n")
+        out.remove('')
+        return out
+    uts_path = pathlib.Path(__file__).parent.resolve()
+    path = os.path.join(uts_path, "data/ut_libprocess/script.py")
+    process = libprocess.Process(f"PYTHONPATH=.. python3 {path} --stderr 1 --stdout 1")
+    process.start()
+    process.wait(print_stdout = True)
+    captured = capsys.readouterr()
+    out = get(captured.out)
+    err = get(captured.err)
+    assert out == ['INFO:pylibcommons.libprocess.pylibcommons:stdout 0']
+    #assert err == ['ERROR:pylibcommons.libprocess.pylibcommons:stderr 0']
