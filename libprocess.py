@@ -96,6 +96,7 @@ class Process:
                 _stderr = self.get_stderr()
                 lines = _stderr.readlines()
                 if len(lines) > 0:
+                    lines = "".join(lines)
                     if exception_on_error:
                         self.stop()
                         raise Exception(f"Error in process {self.cmd}: {lines}")
@@ -109,6 +110,7 @@ class Process:
                 _stdout = self.get_stdout()
                 lines = _stdout.readlines()
                 if len(lines) > 0:
+                    lines = "".join(lines)
                     libprint.print_func_info(logger = log.info, extra_string = f"{lines}")
         try:
             if self.process and check_error_timeout == 0:
@@ -118,7 +120,6 @@ class Process:
             elif self.process and check_error_timeout > 0:
                 while True:
                     try:
-                        libprint.print_func_info(logger = log.debug)
                         self.process.wait(timeout = check_error_timeout)
                     except subprocess.TimeoutExpired:
                         pass
