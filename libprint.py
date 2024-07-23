@@ -16,6 +16,19 @@ def print_func_info(**kwargs):
     kwargs["level"] = level + 1
     logger(get_func_info(**kwargs))
 
+def setup_logger(logger):
+    import logging
+    import sys
+    def create_handler(sysstream, level, _filter):
+        h = logging.StreamHandler(sysstream)
+        h.setLevel(level)
+        h.addFilter(_filter)
+        return h
+    if isinstance(logger, str):
+        logger = logging.getLogger(logger)
+    logger.addHandler(create_handler(sys.stdout, logging.DEBUG, lambda record: record.levelno <= logging.INFO))
+    logger.addHandler(create_handler(sys.stderr, logging.WARN, lambda record: record.levelno > logging.INFO))
+
 def class_debug_prints(**kwargs):
     """
     Not to use. It seems that there is no a way in python to handle properly this type of decorator

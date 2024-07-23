@@ -1,12 +1,13 @@
 import psutil
 import subprocess
 
-import logging
-log = logging.getLogger(__name__)
-
 from pylibcommons import libprint
 from pylibcommons import libkw
 from pylibcommons.private import libtemp
+
+import logging
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 class Process:
     log = log.getChild(__name__)
@@ -39,11 +40,17 @@ class Process:
     def _start_temp_files(self):
         self.fout = libtemp.create_temp_file(delete = self.delete_log_file)
         self.ferr = libtemp.create_temp_file(delete = self.delete_log_file)
-        libprint.print_func_info(logger = log.debug, extra_string = f"Cmd {self.cmd} files stdout: {self.fout.name}, stderr: {self.ferr.name}")
+        libprint.print_func_info(logger = log.debug, extra_string = f"Cmd {self.cmd} files stdout: {self.get_fout_name()}, stderr: {self.get_ferr_name()}")
         process = subprocess.Popen(self.cmd, stdout = self.fout, stderr = self.ferr, universal_newlines = True, shell = self.shell)
         return process
-    def get_out_file_path(self):
-        return self.fout.
+    def get_fout_name(self):
+        if self.fout is None:
+            return None
+        return self.fout.name
+    def get_ferr_name(self):
+        if self.ferr is None:
+            return None
+        return self.ferr.name
     def is_stderr(self):
         if self.ferr is not None:
             return True
@@ -104,7 +111,8 @@ class Process:
                         self.stop()
                         raise Exception(f"Error in process {self.cmd}: {lines}")
                     elif print_stderr:
-                        libprint.print_func_info(logger = log.error, extra_string = f"{lines}")
+                        log.error(lines)
+                        #libprint.print_func_info(logger = log.error, extra_string = f"{lines}")
         def handle_stdout(self):
             nonlocal print_stdout
             if not print_stdout:
@@ -115,7 +123,8 @@ class Process:
                 lines = _stdout.readlines()
                 if len(lines) > 0:
                     lines = "".join(lines)
-                    libprint.print_func_info(logger = log.info, extra_string = f"{lines}")
+                    log.info(lines)
+                    #libprint.print_func_info(logger = log.info, extra_string = f"{lines}")
         try:
             if self.process and check_error_timeout == 0:
                 self.process.wait()

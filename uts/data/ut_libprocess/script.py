@@ -9,9 +9,6 @@ import bson
 from pathlib import Path
 
 def main():
-    loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
-    for log in loggers:
-        log.setLevel(level = logging.DEBUG)
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--stderr", help = "", type = int, default = 0)
