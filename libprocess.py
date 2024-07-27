@@ -97,6 +97,8 @@ class Process:
         print_stdout = libkw.handle_kwargs("print_stdout", default_output = False, **kwargs)
         print_stderr = libkw.handle_kwargs("print_stderr", default_output = False, **kwargs)
         check_stdout_stderr_timeout = libkw.handle_kwargs("check_stdout_stderr_timeout", default_output = 0, **kwargs)
+        if check_stdout_stderr_timeout == None:
+            check_stdout_stderr_timeout = 0
         def handle_stderr(self):
             nonlocal exception_on_error, print_stderr
             if not exception_on_error and not print_stderr:
