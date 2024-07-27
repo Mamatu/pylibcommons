@@ -96,7 +96,7 @@ class Process:
         exception_on_error = libkw.handle_kwargs("exception_on_error", default_output = False, **kwargs)
         print_stdout = libkw.handle_kwargs("print_stdout", default_output = False, **kwargs)
         print_stderr = libkw.handle_kwargs("print_stderr", default_output = False, **kwargs)
-        check_error_timeout = libkw.handle_kwargs("check_error_timeout", default_output = 0, **kwargs)
+        check_stdout_stderr_timeout = libkw.handle_kwargs("check_stdout_stderr_timeout", default_output = 0, **kwargs)
         def handle_stderr(self):
             nonlocal exception_on_error, print_stderr
             if not exception_on_error and not print_stderr:
@@ -126,14 +126,14 @@ class Process:
                     log.info(lines)
                     #libprint.print_func_info(logger = log.info, extra_string = f"{lines}")
         try:
-            if self.process and check_error_timeout == 0:
+            if self.process and check_stdout_stderr_timeout == 0:
                 self.process.wait()
                 handle_stderr(self)
                 handle_stdout(self)
-            elif self.process and check_error_timeout > 0:
+            elif self.process and check_stdout_stderr_timeout > 0:
                 while True:
                     try:
-                        self.process.wait(timeout = check_error_timeout)
+                        self.process.wait(timeout = check_stdout_stderr_timeout)
                     except subprocess.TimeoutExpired:
                         pass
                     handle_stderr(self)
