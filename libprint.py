@@ -92,16 +92,31 @@ def get_caller_args(caller):
 class Filename_Lineno:
     def __init__(self, filename, lineno):
         self.info = [filename, lineno]
+        self.print_filename = True
+        self.print_linenumber = True
     def __getitem__(self, i):
         return self.info[i]
     def set_filename(self, filename):
         self.info[0] = filename
     def set_lineno(self, lineno):
         self.info[1] = lineno
+    def set_print_filename(self, enable):
+        self.print_filename = enable
+    def set_print_linenumber(self, enable):
+        self.print_linenumber = enable
     def __len__(self):
         return len(self.info)
     def __str__(self):
-        return f"{self.info[0]}:{self.info[1]}"
+        _str = ""
+        if self.print_filename:
+            _str = f"{self.info[0]}"
+        if self.print_filename and self.print_linenumber:
+            _str = f"{_str}:"
+        if self.print_linenumber:
+            _str = f"{_str}{self.info[1]}"
+        return _str
+    def is_printed(self):
+        return self.print_filename or self.print_linenumber
     def is_valid(self):
         return self.info[0] and self.info[1]
     @staticmethod
@@ -176,7 +191,9 @@ def convert_args_to_str(**kwargs):
 
 def get_func_info(**kwargs):
     level = libkw.handle_kwargs("level", default_output = 1, **kwargs)
-    pfaloc = libkw.handle_kwargs("print_filename_and_linenumber_of_call", default_output = True, **kwargs)
+    print_filename = libkw.handle_kwargs("print_filename", default_output = True, **kwargs)
+    print_linenumber = libkw.handle_kwargs("print_linenumber", default_output = True, **kwargs)
+    print_function = libkw.handle_kwargs("print_function", default_output = True, **kwargs)
     extra_string = libkw.handle_kwargs("extra_string", default_output = None, **kwargs)
     function_name = libkw.handle_kwargs("function_name", default_output = None, **kwargs)
     file_name = libkw.handle_kwargs(["file_name", "filename"], default_output = None, **kwargs)
@@ -188,25 +205,37 @@ def get_func_info(**kwargs):
     if print_current_time:
         ct = datetime.datetime.now()
         ct = ct.strftime("%Y-%m-%d %H:%M:%S.%f")
-        ct = f"{ct} "
+        ct = f"{ct}"
     if args is None:
         kwargs_1 = kwargs.copy()
         kwargs_1["level"] = level + 1
         args = convert_args_to_str(**kwargs_1)
     if function_name is None:
         function_name = get_function_name(level = level + 1)
-    output = f"{ct}{function_name} ({args})"
+    output = f"{ct}"
+    if print_function:
+        if output:
+            output = f"{output} "
+        output = f"{output}{function_name} ({args})"
     filename_lineno = get_filename_lineno(level = level + 1)
     if file_name is not None:
         filename_lineno.set_filename(file_name)
     if lineno is not None:
         filename_lineno.set_lineno(lineno)
     if prefix:
+        if output:
+            output = f"{output} "
         output = f"{prefix}{output}"
-    if pfaloc:
-        output = f"{output} {filename_lineno}"
+    filename_lineno.set_print_filename(print_filename)
+    filename_lineno.set_print_linenumber(print_linenumber)
+    if filename_lineno.is_printed():
+        if output:
+            output = f"{output} "
+        output = f"{output}{filename_lineno}"
     if extra_string:
-        output = f"{output} {extra_string}"
+        if output:
+            output = f"{output} "
+        output = f"{output}{extra_string}"
     return output
 
 class _ArgName:

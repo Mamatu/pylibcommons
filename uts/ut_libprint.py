@@ -9,28 +9,28 @@ from pylibcommons import libprint, libgrep
 
 def test_print_func_info_1(capsys):
     def foo(x, b):
-        libprint.print_func_info(print_filename_and_linenumber_of_call = False)
+        libprint.print_func_info(print_filename = False, print_linenumber = False)
     foo("a", "b")
     captured = capsys.readouterr()
     assert "foo (x = 'a', b = 'b')\n" == captured.out
 
 def test_print_func_info_2(capsys):
     def foo():
-        libprint.print_func_info(print_filename_and_linenumber_of_call = False)
+        libprint.print_func_info(print_filename = False, print_linenumber = False)
     foo()
     captured = capsys.readouterr()
     assert "foo ()\n" == captured.out
 
 def test_print_func_info_3(capsys):
     def foo(alpha, **kwargs):
-        libprint.print_func_info(print_filename_and_linenumber_of_call = False)
+        libprint.print_func_info(print_filename = False, print_linenumber = False)
     foo(alpha = 1, beta = 2, gamma = 3)
     captured = capsys.readouterr()
     assert "foo (alpha = 1, beta = 2, gamma = 3)\n" == captured.out
 
 def test_print_func_info_4(capsys):
     def foo(alpha, *args, **kwargs):
-        libprint.print_func_info(print_filename_and_linenumber_of_call = False)
+        libprint.print_func_info(print_filename = False, print_linenumber = False)
     foo(1, 4, 5,  beta = 2, gamma = 3)
     captured = capsys.readouterr()
     assert "foo (alpha = 1, 4, 5, beta = 2, gamma = 3)\n" == captured.out
@@ -135,7 +135,22 @@ def mocked_now(now):
 def test_print_func_info_with_current_time_1(capsys):
     with mocked_now(datetime.datetime(2022, 1, 29, hour = 20, minute = 54, second = 54, microsecond = 000000)):
         def foo(alpha, *args, **kwargs):
-            libprint.print_func_info(print_filename_and_linenumber_of_call = False, print_current_time = True)
+            libprint.print_func_info(print_filename = False, print_linenumber = False, print_current_time = True)
         foo(1, 4, 5,  beta = 2, gamma = 3)
         captured = capsys.readouterr()
         assert "2022-01-29 20:54:54.000000 foo (alpha = 1, 4, 5, beta = 2, gamma = 3)\n" == captured.out
+
+def test_print_no_function(capsys):
+    def foo(x, b):
+        libprint.print_func_info(print_function = False)
+    foo("a", "b")
+    captured = capsys.readouterr()
+    assert "/home/mmatula/pylibcommons/uts/ut_libprint.py:145\n" == captured.out
+
+def test_print_extra_string_with_current_time(capsys):
+    with mocked_now(datetime.datetime(2022, 1, 29, hour = 20, minute = 54, second = 54, microsecond = 000000)):
+        def foo(alpha, *args, **kwargs):
+            libprint.print_func_info(print_function = False, print_filename = False, print_linenumber = False, print_current_time = True, extra_string = "test")
+        foo(1, 4, 5,  beta = 2, gamma = 3)
+        captured = capsys.readouterr()
+        assert "2022-01-29 20:54:54.000000 test\n" == captured.out
