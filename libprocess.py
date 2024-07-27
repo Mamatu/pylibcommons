@@ -91,6 +91,10 @@ class Process:
             self.emit_warning_during_destroy(nsp)
         except subprocess.TimeoutExpired as te: 
             self.emit_warning_during_destroy(te)
+    def get_returncode(self):
+        if self.process is None:
+            raise Exception(f"Process {self.cmd} not started")
+        return self.process.returncode
     def wait(self, **kwargs):
         libprint.print_func_info(logger = log.debug, print_current_time = True)
         exception_on_error = libkw.handle_kwargs("exception_on_error", default_output = False, **kwargs)
