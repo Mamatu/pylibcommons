@@ -145,7 +145,10 @@ def test_print_no_function(capsys):
         libprint.print_func_info(print_function = False)
     foo("a", "b")
     captured = capsys.readouterr()
-    assert "/home/mmatula/pylibcommons/uts/ut_libprint.py:145\n" == captured.out
+    expected = "pylibcommons/uts/ut_libprint.py:145\n"
+    out = str(captured.out)
+    out = out[len(out) - len(expected):]
+    assert "pylibcommons/uts/ut_libprint.py:145\n" in out
 
 def test_print_extra_string_with_current_time(capsys):
     with mocked_now(datetime.datetime(2022, 1, 29, hour = 20, minute = 54, second = 54, microsecond = 000000)):
