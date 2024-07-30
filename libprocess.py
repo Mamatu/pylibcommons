@@ -10,6 +10,11 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 class Process:
+    class ReturnCodeException(Exception):
+        def __init__(self, cmd, returncode):
+            self.cmd = cmd
+            self.returncode = returncode
+            Exception.__init__(self, f"Return code is not zero in process {cmd}. It is {returncode}")
     log = log.getChild(__name__)
     def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True):
         self.is_destroyed_flag = False
@@ -96,54 +101,44 @@ class Process:
             raise Exception(f"Process {self.cmd} not started")
         return self.process.returncode
     def wait(self, **kwargs):
+        if not self.process:
+            raise Exception("Process is not started")
         libprint.print_func_info(logger = log.debug, print_current_time = True)
         exception_on_error = libkw.handle_kwargs("exception_on_error", default_output = False, **kwargs)
         print_stdout = libkw.handle_kwargs("print_stdout", default_output = False, **kwargs)
         print_stderr = libkw.handle_kwargs("print_stderr", default_output = False, **kwargs)
-        check_stdout_stderr_timeout = libkw.handle_kwargs("check_stdout_stderr_timeout", default_output = 0, **kwargs)
-        if check_stdout_stderr_timeout == None:
-            check_stdout_stderr_timeout = 0
-        def handle_stderr(self):
-            nonlocal exception_on_error, print_stderr
-            if not exception_on_error and not print_stderr:
+        check_error_timeout = libkw.handle_kwargs("check_error_timeout", default_output = None, **kwargs)
+        if isinstance(check_error_timeout, int) and check_error_timeout == 0:
+            check_error_timeout = None
+        def handle_stream(self, print_it, is_stream, get_stream, logger):
+            if not print_it:
                 return
-            if self.is_stderr():
-                _stderr = self.get_stderr()
-                _stderr.seek(0)
-                lines = _stderr.readlines()
+            if is_stream():
+                _std = get_stream()
+                _std.seek(0)
+                lines = _std.readlines()
                 if len(lines) > 0:
                     lines = "".join(lines)
-                    if exception_on_error:
-                        self.stop()
-                        raise Exception(f"Error in process {self.cmd}: {lines}")
-                    elif print_stderr:
-                        log.error(lines)
-                        #libprint.print_func_info(logger = log.error, extra_string = f"{lines}")
+                    logger(lines)
+        def handle_stderr(self):
+            nonlocal print_stderr
+            handle_stream(self, print_stderr, self.is_stderr, self.get_stderr, log.info)
         def handle_stdout(self):
             nonlocal print_stdout
-            if not print_stdout:
-                return
-            if self.is_stdout():
-                _stdout = self.get_stdout()
-                _stdout.seek(0)
-                lines = _stdout.readlines()
-                if len(lines) > 0:
-                    lines = "".join(lines)
-                    log.info(lines)
-                    #libprint.print_func_info(logger = log.info, extra_string = f"{lines}")
+            handle_stream(self, print_stdout, self.is_stdout, self.get_stdout, log.error)
         try:
-            if self.process and check_stdout_stderr_timeout == 0:
-                self.process.wait()
+            def handle_stds(self):
                 handle_stderr(self)
                 handle_stdout(self)
-            elif self.process and check_stdout_stderr_timeout > 0:
-                while True:
-                    try:
-                        self.process.wait(timeout = check_stdout_stderr_timeout)
-                    except subprocess.TimeoutExpired:
-                        pass
-                    handle_stderr(self)
-                    handle_stdout(self)
+            returncode = None
+            while returncode == None:
+                try:
+                    returncode = self.process.wait(timeout = check_error_timeout)
+                except subprocess.TimeoutExpired:
+                    pass
+                handle_stds(self)
+            if exception_on_error and returncode != 0:
+                raise Process.ReturnCodeException(self.cmd, returncode)
         finally:
             libprint.print_func_info(logger = log.debug, print_current_time = True)
 
