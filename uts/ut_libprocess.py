@@ -6,8 +6,6 @@ __version__ = "2.0"
 __maintainer__ = "Marcin Matula"
 
 def test_process_with_exception():
-    import logging
-    log = logging.getLogger(__name__)
     from pylibcommons import libprocess
     import pytest
     import pathlib
@@ -20,14 +18,10 @@ def test_process_with_exception():
         process.wait(exception_on_error=True)
 
 def test_process_with_returncode_1(capsys):
-    import logging
-    log = logging.getLogger(__name__)
     import pytest
     import pathlib
     import os
     from pylibcommons import libprocess
-    from sys import stderr
-    from sys import stdout
     def make_list(stream):
         out = stream
         out = out.split("\n")
