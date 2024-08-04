@@ -41,7 +41,6 @@ class Thread(threading.Thread):
                 self._stopped_cond.wait(timeout = timeout)
     def is_stopped(self):
         with self._stopped_cond:
-            print(self._stopped)
             return self._stopped
     def get_stop_control(self):
         return self.stop_control
