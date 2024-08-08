@@ -28,7 +28,7 @@ def schedule_jobs(processes, jobs_count, process_filter = lambda process: proces
                     return
     print_stderr = libkw.handle_kwargs("print_stderr", default_output = False, **kwargs)
     print_stdout = libkw.handle_kwargs("print_stdout", default_output = False, **kwargs)
-    exception_on_error = libkw.handle_kwargs("exception_on_error", default_output = False, **kwargs)
+    exception_on_error = libkw.handle_kwargs("exception_on_error", default_output = True, **kwargs)
     stop_on_exception = libkw.handle_kwargs("stop_on_exception", default_output = True, **kwargs)
     threads = []
     exceptions = []
