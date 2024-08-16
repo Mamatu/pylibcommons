@@ -16,7 +16,8 @@ def schedule_jobs(processes, jobs_count, process_filter = lambda process: proces
                     return
                 process = process_filter(processes[idx])
                 process.start()
-                wait_kwargs = {"print_stderr": print_stderr, "print_stdout" : print_stdout, "exception_on_error" : exception_on_error}
+                wait_kwargs = {"print_stdout" : print_stdout, "exception_on_error" : exception_on_error}
+                libprint.print_func_info(logger = log.info, extra_string = f"process is {type(process)}")
                 process.wait(**wait_kwargs)
             except Exception as ex:
                 tb = traceback.format_exc()
