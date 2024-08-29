@@ -48,13 +48,13 @@ def class_debug_prints(**kwargs):
                 inner_kwargs["filename"] = filename_lineno[0]
                 inner_kwargs["lineno"] = filename_lineno[1]
                 inner_kwargs["function_name"] = orig_method.__name__
-                inner_kwargs["args"] = convert_args_to_str(level = 1, **kwargs)
-                print_func_info(**inner_kwargs, prefix = prefix)
+                inner_kwargs["args"] = convert_args_to_str(level = 1, **kwargs, arg_length_limit = None)
+                print_func_info(**inner_kwargs, prefix = prefix, arg_length_limit = None)
                 try:
                     return func(self, *args, **kwargs)
                 finally:
                     if begin_end:
-                        print_func_info(**inner_kwargs, prefix = "- ")
+                        print_func_info(**inner_kwargs, prefix = "- ", arg_length_limit = None)
             return wrapper
         return wrapper_func
     def class_wrapper(clazz):
@@ -155,10 +155,16 @@ def get_func_args(**kwargs):
     caller = get_caller_from_frame_or_level(frame)
     return get_caller_args(caller)
 
+def limit_length(arg, **kwargs):
+    arg_length_limit = libkw.handle_kwargs("arg_length_limit", default_output = 100, **kwargs)
+    if arg_length_limit is not None:
+        if len(arg) > arg_length_limit:
+            return f"{arg[:arg_length_limit]}..."
+    return arg
+
 def convert_args_to_str(**kwargs):
     level = libkw.handle_kwargs("level", default_output = 1, **kwargs)
     args = libkw.handle_kwargs("args", default_output = None, **kwargs)
-    args_chars_limit = libkw.handle_kwargs("args_chars_limit", default_output = None, **kwargs)
     if args is None:
         args = get_func_args(level = level + 1)
     for arg in args:
@@ -166,27 +172,24 @@ def convert_args_to_str(**kwargs):
         if isinstance(arg, list) or isinstance(arg, tuple):
             if len(arg) == 2:
                 arg0 = f"{arg[0]}, "
+                arg1 = limit_length(str(arg[1]), **kwargs)
                 if type(arg[0]) == _ArgName:
                     arg0 = f"{arg[0]} = "
                 if isinstance(arg[1], str):
-                    arg = f"{arg0}\'{arg[1]}\'"
+                    arg = f"{arg0}\'{arg1}\'"
                 elif isinstance(arg[1], list):
-                    arg = f"{arg0}{arg[1]}"
+                    arg = f"{arg0}{arg1}"
                 elif isinstance(arg[1], tuple):
-                    arg = f"{arg0}{arg[1]}"
+                    arg = f"{arg0}{arg1}"
                 else:
-                    arg = f"{arg0}{arg[1]}"
+                    arg = f"{arg0}{arg1}"
             elif len(arg) == 1:
-                arg = f"{arg[0]}"
+                arg = f"{limit_length(arg[0])}"
             elif len(arg) > 1:
-                arg = str(arg)
+                arg = limit_length(str(arg))
         args[idx] = arg
     args = map(lambda arg: str(arg), args)
     args = list(args)
-    if args_chars_limit is not None:
-        for arg in args:
-            if len(arg) > args_chars_limit:
-                args[args.index(arg)] = f"{arg[:args_chars_limit]}..."
     return ", ".join(args)
 
 def get_func_info(**kwargs):
