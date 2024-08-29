@@ -157,3 +157,10 @@ def test_print_extra_string_with_current_time(capsys):
         foo(1, 4, 5,  beta = 2, gamma = 3)
         captured = capsys.readouterr()
         assert "2022-01-29 20:54:54.000000 test\n" == captured.out
+
+def test_print_func_info_args_chars_limit(capsys):
+    def foo(alpha, **kwargs):
+        libprint.print_func_info(print_filename = False, print_linenumber = False, arg_length_limit = 5)
+    foo(alpha = 1, beta = 2, gamma = "0123456789")
+    captured = capsys.readouterr()
+    assert "foo (alpha = 1, beta = 2, gamma = \'01234...\')\n" == captured.out
