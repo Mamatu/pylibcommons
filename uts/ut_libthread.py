@@ -37,3 +37,22 @@ def test_stop_async_2_threads():
     for thread in threads: thread.join()
     assert is_stopped[0] == True
     assert is_stopped[1] == True
+
+def test_stop_async_kwargs():
+    def target(is_stopped, stop_control, a, b):
+        stop_control.wait_for_stop()
+        is_stopped[0] = True
+        a[0] = 1
+        b[0] = 2
+    is_stopped = [False]
+    a = [0]
+    b = [0]
+    kwargs = {"a" : a, "b" : b}
+    thread = libthread.Thread(target, args = [is_stopped], kwargs = kwargs)
+    thread.start()
+    stop_control = thread.get_stop_control()
+    stop_control.stop()
+    thread.join()
+    assert is_stopped[0] == True
+    assert a[0] == 1
+    assert b[0] == 2
