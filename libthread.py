@@ -8,6 +8,15 @@ __maintainer__ = "Marcin Matula"
 import threading
 from pylibcommons import libprint, libstopcontrol
 
+import logging
+log = logging.getLogger("pytorprivoxy")
+
+def excepthook(exctype, value, tb, thread):
+    libprint.print_exception(exctype, value, tb)
+    libstopcontrol.stop_all()
+    import sys
+    sys.__excepthook__(exctype, value, tb)
+
 class Thread(threading.Thread):
     def __init__(self, target, stop_callback = None, stop_control = libstopcontrol.StopControl(), args = [], kwargs = {}):
         assert isinstance(args, list), "args must be list for this object"
@@ -30,17 +39,31 @@ class Thread(threading.Thread):
         args.append(self.get_stop_control())
         args.append(self)
         super().__init__(target = _thread_target_wrapper, args = args, kwargs = kwargs)
+    @libprint.func_info(logger = log.debug)
+    def start(self):
+        libprint.print_func_info(logger = log.debug)
+        super().start()
+        libprint.print_func_info(logger = log.debug)
+    @libprint.func_info(logger = log.debug)
     def stop(self):
+        libprint.print_func_info(logger = log.debug)
         with self._stopped_cond:
             self._stopped = True
             self._stopped_cond.notify_all()
+        libprint.print_func_info(logger = log.debug)
+    @libprint.func_info(logger = log.debug)
     def wait_for_stop(self, timeout = None):
+        libprint.print_func_info(logger = log.debug)
         with self._stopped_cond:
             if self._stopped is False:
                 libprint.print_func_info()
                 self._stopped_cond.wait(timeout = timeout)
+        libprint.print_func_info(logger = log.debug)
+    @libprint.func_info(logger = log.debug)
     def is_stopped(self):
+        libprint.print_func_info(logger = log.debug)
         with self._stopped_cond:
             return self._stopped
+        libprint.print_func_info(logger = log.debug)
     def get_stop_control(self):
         return self.stop_control
