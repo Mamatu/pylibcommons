@@ -29,6 +29,17 @@ def setup_logger(logger):
     logger.addHandler(create_handler(sys.stdout, logging.DEBUG, lambda record: record.levelno <= logging.INFO))
     logger.addHandler(create_handler(sys.stderr, logging.WARN, lambda record: record.levelno > logging.INFO))
 
+def func_info(logger = print):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            print_func_info(prefix = "+", logger = logger, function_name = f"{func.__name__}@wrapper", print_filename = False, print_linenumber = False)
+            try:
+                return func(*args, **kwargs)
+            finally:
+                print_func_info(prefix = "-", logger = logger, function_name = f"{func.__name__}@wrapper", print_filename = False, print_linenumber = False)
+        return wrapper
+    return decorator
+
 def class_debug_prints(**kwargs):
     """
     Not to use. It seems that there is no a way in python to handle properly this type of decorator
