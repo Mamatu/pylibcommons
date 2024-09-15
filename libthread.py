@@ -28,6 +28,7 @@ class Thread(threading.Thread):
         self.stop_callback = stop_callback
         self.stop_control = stop_control
         self.stop_control.add(self)
+        @libprint.func_info(logger = log.debug)
         def _thread_target_wrapper(*args, **kwargs):
             _self = args[-1]
             try:
