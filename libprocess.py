@@ -10,7 +10,7 @@ import subprocess
 
 from pylibcommons import libprint
 from pylibcommons import libkw
-from pylibcommons.private import libtemp
+from pylibcommons.private import libtemp, libprocessmonitor
 
 import logging
 logging.basicConfig()
@@ -35,52 +35,55 @@ class Process:
         self.fout = None
         self.ferr = None
         self.timeout = timeout
-    @libprint.func_info(logger = log.debug)
+        def callback(state, lines):
+            if state == "stdout":
+                log.info(lines)
+            elif state == "stderr":
+                log.error(lines)
+            else:
+                log.debug(lines)
+        self.processthread = libprocessmonitor.ProcessMonitor(self, callback)
     def was_stopped(self):
         return self.is_destroyed_flag
-    @libprint.func_info(logger = log.debug)
     def emit_warning_during_destroy(self, ex):
         libprint.print_func_info(logger = log.warn, extra_string = f"{ex}: please verify if process {self.cmd} was properly closed")
-    @libprint.func_info(logger = log.debug)
     def start(self):
         if self.process:
             raise Exception(f"Process {self.cmd} already started {self.process}")
+        self.processthread.start()
         if self.use_temp_file:
             self.process = self._start_temp_files()
         else:
             self.process = self._start_pipes()
         libprint.print_func_info(logger = log.debug, extra_string = f"Start process {self.process}")
-    @libprint.func_info(logger = log.debug)
     def _start_pipes(self):
         return subprocess.Popen(self.cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, universal_newlines = True, shell = self.shell)
-    @libprint.func_info(logger = log.debug)
     def _start_temp_files(self):
         self.fout = libtemp.create_temp_file(delete = self.delete_log_file)
         self.ferr = libtemp.create_temp_file(delete = self.delete_log_file)
         libprint.print_func_info(logger = log.debug, extra_string = f"Cmd {self.cmd} files stdout: {self.get_fout_name()}, stderr: {self.get_ferr_name()}")
         process = subprocess.Popen(self.cmd, stdout = self.fout, stderr = self.ferr, universal_newlines = True, shell = self.shell)
         return process
-    @libprint.func_info(logger = log.debug)
     def get_fout_name(self):
         if self.fout is None:
             return None
         return self.fout.name
-    @libprint.func_info(logger = log.debug)
     def get_ferr_name(self):
         if self.ferr is None:
             return None
         return self.ferr.name
-    @libprint.func_info(logger = log.debug)
     def is_stderr(self):
         if self.ferr is not None:
             return True
         return hasattr(self.process, "stderr")
-    @libprint.func_info(logger = log.debug)
+    def has_stderr(self):
+        return self.is_stderr()
     def is_stdout(self):
         if self.fout is not None:
             return True
         return hasattr(self.process, "stdout")
-    @libprint.func_info(logger = log.debug)
+    def has_stdout(self):
+        return self.is_stdout()
     def get_stderr(self):
         if self.ferr:
             self.ferr.seek(0)
@@ -88,7 +91,6 @@ class Process:
         if self.process is None:
             return None
         return self.process.stderr
-    @libprint.func_info(logger = log.debug)
     def get_stdout(self):
         if self.fout:
             self.fout.seek(0)
@@ -96,16 +98,15 @@ class Process:
         if self.process is None:
             return None
         return self.process.stdout
-    @libprint.func_info(logger = log.debug)
     def stop(self):
         libprint.print_func_info(logger = log.debug, extra_string = f"Stop process {self.process}")
+        self.processthread.stop()
         self.is_destroyed_flag = True
         if not hasattr(self, "process"):
             return
         if self.process is None:
             return
         self.cleanup()
-    @libprint.func_info(logger = log.debug)
     def cleanup(self):
         libprint.print_func_info(logger = log.debug, extra_string = f"Cleanup process {self.process}")
         try:
@@ -116,12 +117,14 @@ class Process:
             self.emit_warning_during_destroy(nsp)
         except subprocess.TimeoutExpired as te: 
             self.emit_warning_during_destroy(te)
-    @libprint.func_info(logger = log.debug)
     def get_returncode(self):
         if self.process is None:
             raise Exception(f"Process {self.cmd} not started")
         return self.process.returncode
-    @libprint.func_info(logger = log.debug)
+    def poll(self):
+        if self.process is not None:
+            return self.process.poll()
+        return None
     def wait(self, **kwargs):
         if not self.process:
             raise Exception("Process is not started")
@@ -164,6 +167,7 @@ class Process:
             if exception_on_error and returncode != 0:
                 raise Process.ReturnCodeException(self.cmd, returncode, _stdout, _stderr)
         finally:
+            self.stop()
             libprint.print_func_info(logger = log.debug, print_current_time = True)
 
 def make(cmd, delete_log_file = True):

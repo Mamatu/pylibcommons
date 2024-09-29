@@ -28,7 +28,6 @@ class Thread(threading.Thread):
         self.stop_callback = stop_callback
         self.stop_control = stop_control
         self.stop_control.add(self)
-        @libprint.func_info(logger = log.debug)
         def _thread_target_wrapper(*args, **kwargs):
             _self = args[-1]
             try:
@@ -40,19 +39,16 @@ class Thread(threading.Thread):
         args.append(self.get_stop_control())
         args.append(self)
         super().__init__(target = _thread_target_wrapper, args = args, kwargs = kwargs)
-    @libprint.func_info(logger = log.debug)
     def start(self):
         libprint.print_func_info(logger = log.debug)
         super().start()
         libprint.print_func_info(logger = log.debug)
-    @libprint.func_info(logger = log.debug)
     def stop(self):
         libprint.print_func_info(logger = log.debug)
         with self._stopped_cond:
             self._stopped = True
             self._stopped_cond.notify_all()
         libprint.print_func_info(logger = log.debug)
-    @libprint.func_info(logger = log.debug)
     def wait_for_stop(self, timeout = None):
         libprint.print_func_info(logger = log.debug)
         with self._stopped_cond:
@@ -60,7 +56,6 @@ class Thread(threading.Thread):
                 libprint.print_func_info()
                 self._stopped_cond.wait(timeout = timeout)
         libprint.print_func_info(logger = log.debug)
-    @libprint.func_info(logger = log.debug)
     def is_stopped(self):
         libprint.print_func_info(logger = log.debug)
         with self._stopped_cond:

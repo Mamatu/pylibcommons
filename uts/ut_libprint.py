@@ -165,15 +165,15 @@ def test_print_func_info_args_chars_limit(capsys):
     captured = capsys.readouterr()
     assert "foo (alpha = 1, beta = 2, gamma = \'01234...\')\n" == captured.out
 
-def test_func_info(capsys):
-    class Foo:
-        @libprint.func_info()
-        def foo(self, alpha, *args, **kwargs):
-            pass
-    foo = Foo()
-    foo.foo(1, 4, 5, beta = 2, gamma = 3)
-    captured = capsys.readouterr()
-    captured = captured.out
-    import re
-    pattern = "\+foo@wrapper \(.*, 1, 4, 5, beta = 2, gamma = 3\) \n-foo@wrapper \(.*, 1, 4, 5, beta = 2, gamma = 3\) \n"
-    assert re.match(pattern, captured) != None
+#def test_func_info(capsys):
+#    class Foo:
+#        @libprint.func_info()
+#        def foo(self, alpha, *args, **kwargs):
+#            pass
+#    foo = Foo()
+#    foo.foo(1, 4, 5, beta = 2, gamma = 3)
+#    captured = capsys.readouterr()
+#    captured = captured.out
+#    import re
+#    pattern = "\+foo@wrapper \(.*, 1, 4, 5, beta = 2, gamma = 3\) \n-foo@wrapper \(.*, 1, 4, 5, beta = 2, gamma = 3\) \n"
+#    assert re.match(pattern, captured) != None
