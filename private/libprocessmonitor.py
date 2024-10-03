@@ -1,5 +1,4 @@
 from pylibcommons import libthread
-import time
 
 class ProcessMonitor(libthread.Thread):
     def __init__(self, process, callback, logger = None):
