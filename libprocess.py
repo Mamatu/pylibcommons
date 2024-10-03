@@ -1,9 +1,16 @@
+__author__ = "Marcin Matula"
+__copyright__ = "Copyright (C) 2022, Marcin Matula"
+__credits__ = ["Marcin Matula"]
+__license__ = "Apache License"
+__version__ = "2.0"
+__maintainer__ = "Marcin Matula"
+
 import psutil
 import subprocess
 
 from pylibcommons import libprint
 from pylibcommons import libkw
-from pylibcommons.private import libtemp
+from pylibcommons.private import libtemp, libprocessmonitor
 
 import logging
 logging.basicConfig()
@@ -11,10 +18,10 @@ log = logging.getLogger(__name__)
 
 class Process:
     class ReturnCodeException(Exception):
-        def __init__(self, cmd, returncode):
+        def __init__(self, cmd, returncode, _stdout, _stderr):
             self.cmd = cmd
             self.returncode = returncode
-            Exception.__init__(self, f"Return code is not zero in process {cmd}. It is {returncode}")
+            Exception.__init__(self, f"Return code is not zero in process {cmd}. It is {returncode}. stdout: {_stdout}, stderr: {_stderr}")
     log = log.getChild(__name__)
     def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True):
         self.is_destroyed_flag = False
@@ -28,6 +35,14 @@ class Process:
         self.fout = None
         self.ferr = None
         self.timeout = timeout
+        def callback(state, lines):
+            if state == "stdout":
+                log.info(lines)
+            elif state == "stderr":
+                log.error(lines)
+            else:
+                log.debug(lines)
+        self.processthread = libprocessmonitor.ProcessMonitor(self, callback)
     def was_stopped(self):
         return self.is_destroyed_flag
     def emit_warning_during_destroy(self, ex):
@@ -35,6 +50,7 @@ class Process:
     def start(self):
         if self.process:
             raise Exception(f"Process {self.cmd} already started {self.process}")
+        self.processthread.start()
         if self.use_temp_file:
             self.process = self._start_temp_files()
         else:
@@ -60,10 +76,14 @@ class Process:
         if self.ferr is not None:
             return True
         return hasattr(self.process, "stderr")
+    def has_stderr(self):
+        return self.is_stderr()
     def is_stdout(self):
         if self.fout is not None:
             return True
         return hasattr(self.process, "stdout")
+    def has_stdout(self):
+        return self.is_stdout()
     def get_stderr(self):
         if self.ferr:
             self.ferr.seek(0)
@@ -80,6 +100,7 @@ class Process:
         return self.process.stdout
     def stop(self):
         libprint.print_func_info(logger = log.debug, extra_string = f"Stop process {self.process}")
+        self.processthread.stop()
         self.is_destroyed_flag = True
         if not hasattr(self, "process"):
             return
@@ -100,6 +121,10 @@ class Process:
         if self.process is None:
             raise Exception(f"Process {self.cmd} not started")
         return self.process.returncode
+    def poll(self):
+        if self.process is not None:
+            return self.process.poll()
+        return None
     def wait(self, **kwargs):
         if not self.process:
             raise Exception("Process is not started")
@@ -111,35 +136,38 @@ class Process:
         if isinstance(check_error_timeout, int) and check_error_timeout == 0:
             check_error_timeout = None
         def handle_stream(self, print_it, is_stream, get_stream, logger):
-            if not print_it:
-                return
             if is_stream():
                 _std = get_stream()
                 _std.seek(0)
                 lines = _std.readlines()
                 if len(lines) > 0:
                     lines = "".join(lines)
-                    logger(lines)
+                    if print_it:
+                        logger(lines)
+                    return lines
+            return ""
         def handle_stderr(self):
             nonlocal print_stderr
-            handle_stream(self, print_stderr, self.is_stderr, self.get_stderr, log.info)
+            return handle_stream(self, print_stderr, self.is_stderr, self.get_stderr, log.info)
         def handle_stdout(self):
             nonlocal print_stdout
-            handle_stream(self, print_stdout, self.is_stdout, self.get_stdout, log.error)
+            return handle_stream(self, print_stdout, self.is_stdout, self.get_stdout, log.error)
         try:
             def handle_stds(self):
-                handle_stderr(self)
-                handle_stdout(self)
+                _stderr = handle_stderr(self)
+                _stdout = handle_stdout(self)
+                return _stdout, _stderr
             returncode = None
             while returncode == None:
                 try:
                     returncode = self.process.wait(timeout = check_error_timeout)
                 except subprocess.TimeoutExpired:
                     pass
-                handle_stds(self)
+                _stdout, _stderr = handle_stds(self)
             if exception_on_error and returncode != 0:
-                raise Process.ReturnCodeException(self.cmd, returncode)
+                raise Process.ReturnCodeException(self.cmd, returncode, _stdout, _stderr)
         finally:
+            self.stop()
             libprint.print_func_info(logger = log.debug, print_current_time = True)
 
 def make(cmd, delete_log_file = True):
