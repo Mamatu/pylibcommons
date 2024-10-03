@@ -18,8 +18,7 @@ class ProcessMonitor(libthread.Thread):
                 if returncode is not None:
                     callback("returncode", returncode)
                     stop_control.stop()
-                #stop_control.wait_for_stop(timeout = 1.)
-                time.sleep(1.)
+                stop_control.wait_for_stop(timeout = 1.)
         super().__init__(target, args = [self, self.process, self.callback])
     def read_stream(self, has_stream, get_stream, logger):
         if has_stream():
