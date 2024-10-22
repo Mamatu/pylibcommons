@@ -1,3 +1,10 @@
+__author__ = "Marcin Matula"
+__copyright__ = "Copyright (C) 2022, Marcin Matula"
+__credits__ = ["Marcin Matula"]
+__license__ = "Apache License"
+__version__ = "2.0"
+__maintainer__ = "Marcin Matula"
+
 def handle_kwargs(keys, default_output = None, is_required = False, return_alternative = False, **kwargs):
     if isinstance(keys, str):
         return handle_kwargs([keys], default_output = default_output, is_required = is_required, **kwargs)
