@@ -18,7 +18,11 @@ def excepthook(exctype, value, tb, thread):
     sys.__excepthook__(exctype, value, tb)
 
 class Thread(threading.Thread):
-    def __init__(self, target, stop_callback = None, stop_control = libstopcontrol.StopControl(), args = [], kwargs = {}):
+    def __init__(self, target, stop_callback = None, stop_control = libstopcontrol.StopControl(), args = None, kwargs = None):
+        if args is None:
+            args = []
+        if kwargs is None:
+            kwargs = {}
         assert isinstance(args, list), "args must be list for this object"
         self._stopped = False
         self._stopped_cond = threading.Condition()
