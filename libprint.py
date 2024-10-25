@@ -16,6 +16,24 @@ def print_func_info(**kwargs):
     kwargs["level"] = level + 1
     logger(get_func_info(**kwargs))
 
+_global_strings = []
+
+def add_global_string(string):
+    global _global_strings
+    _global_strings.append(string)
+
+def clear_global_string():
+    global _global_strings
+    _global_strings = []
+
+def set_global_string(string):
+    clear_global_string()
+    add_global_string(string)
+
+def get_global_strings():
+    global _global_strings
+    return _global_strings.copy()
+
 def setup_logger(logger):
     import logging
     import sys
@@ -250,6 +268,9 @@ def get_func_info(**kwargs):
         if output:
             output = f"{output} "
         output = f"{output}{extra_string}"
+    gs = get_global_strings()
+    if len(gs) > 0:
+        output = f"{'|'.join(gs)} {output}"
     return output
 
 class _ArgName:
