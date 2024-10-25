@@ -6,6 +6,8 @@ __version__ = "2.0"
 __maintainer__ = "Marcin Matula"
 
 def terminate_process_and_children(process):
+    if process is None:
+        return
     import subprocess
     import psutil
     parent = psutil.Process(process.pid)
