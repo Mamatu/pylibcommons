@@ -13,7 +13,6 @@ from pylibcommons import libkw
 from pylibcommons.private import libtemp, libprocessmonitor
 
 import logging
-logging.basicConfig()
 log = logging.getLogger(__name__)
 
 class Process:
@@ -22,7 +21,6 @@ class Process:
             self.cmd = cmd
             self.returncode = returncode
             Exception.__init__(self, f"Return code is not zero in process {cmd}. It is {returncode}. stdout: {_stdout}, stderr: {_stderr}")
-    log = log.getChild(__name__)
     def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True):
         self.is_destroyed_flag = False
         self.cmd = cmd

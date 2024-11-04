@@ -9,7 +9,7 @@ import threading
 from pylibcommons import libprint, libstopcontrol
 
 import logging
-log = logging.getLogger("pytorprivoxy")
+log = logging.getLogger(__name__)
 
 def excepthook(exctype, value, tb, thread):
     libprint.print_exception(exctype, value, tb)
