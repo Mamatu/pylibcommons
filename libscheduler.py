@@ -44,7 +44,8 @@ def schedule_jobs(processes, jobs_count, process_filter = lambda process: proces
     stop_control = libstopcontrol.StopControl()
     args_list = [lock, index, processes, process_filter, print_stderr, print_stdout, exception_on_error, stop_on_exception, log, exceptions]
     for i in range(jobs_count):
-        threads.append(libthread.Thread(stop_control = stop_control, args = args_list.copy(), target = target))
+        thread_name = f"scheduled job {i}"
+        threads.append(libthread.Thread(stop_control = stop_control, args = args_list.copy(), target = target, thread_name = thread_name))
     for thread in threads:
         thread.start()
     for thread in threads:

@@ -18,7 +18,7 @@ def excepthook(exctype, value, tb, thread):
     sys.__excepthook__(exctype, value, tb)
 
 class Thread(threading.Thread):
-    def __init__(self, target, stop_callback = None, stop_control = libstopcontrol.StopControl(), args = None, kwargs = None):
+    def __init__(self, target, stop_callback = None, thread_name = None, stop_control = libstopcontrol.StopControl(), args = None, kwargs = None):
         if args is None:
             args = []
         if kwargs is None:
@@ -29,6 +29,7 @@ class Thread(threading.Thread):
         self._thread_stopped = False
         self._thread_target = target
         self._thread_cond = threading.Condition()
+        self.thread_name = thread_name
         self.stop_callback = stop_callback
         self.stop_control = stop_control
         self.stop_control.add(self)
@@ -44,26 +45,27 @@ class Thread(threading.Thread):
         args.append(self)
         super().__init__(target = _thread_target_wrapper, args = args, kwargs = kwargs)
     def start(self):
-        libprint.print_func_info(logger = log.debug)
+        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
         super().start()
-        libprint.print_func_info(logger = log.debug)
+        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
     def stop(self):
-        libprint.print_func_info(logger = log.debug)
+        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
         with self._stopped_cond:
             self._stopped = True
+            libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
             self._stopped_cond.notify_all()
-        libprint.print_func_info(logger = log.debug)
+        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
     def wait_for_stop(self, timeout = None):
-        libprint.print_func_info(logger = log.debug)
+        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
         with self._stopped_cond:
             if self._stopped is False:
-                libprint.print_func_info()
+                libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
                 self._stopped_cond.wait(timeout = timeout)
-        libprint.print_func_info(logger = log.debug)
+        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
     def is_stopped(self):
-        libprint.print_func_info(logger = log.debug)
+        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
         with self._stopped_cond:
             return self._stopped
-        libprint.print_func_info(logger = log.debug)
+        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
     def get_stop_control(self):
         return self.stop_control

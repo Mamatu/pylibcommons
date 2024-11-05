@@ -18,7 +18,7 @@ class ProcessMonitor(libthread.Thread):
                     callback("returncode", returncode)
                     stop_control.stop()
                 stop_control.wait_for_stop(timeout = 1.)
-        super().__init__(target, args = [self, self.process, self.callback])
+        super().__init__(target, args = [self, self.process, self.callback], thread_name = f"Process monitor for {self.process}")
     def read_stream(self, has_stream, get_stream, logger):
         if has_stream():
             _std = get_stream()
