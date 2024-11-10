@@ -98,7 +98,7 @@ class Process:
         return self.process.stdout
     def stop(self):
         libprint.print_func_info(logger = log.debug, extra_string = f"Stop process {self.process}")
-        self.processthread.stop()
+        self.processthread.get_stop_control().stop()
         self.is_destroyed_flag = True
         if not hasattr(self, "process"):
             return
