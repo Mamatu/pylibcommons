@@ -33,11 +33,14 @@ class Thread(threading.Thread):
         self.stop_callback = stop_callback
         self.stop_control = stop_control
         self.stop_control.add(self)
+        self.exception_info = None
         def _thread_target_wrapper(*args, **kwargs):
             _self = args[-1]
             try:
                 _args = args[:-1]
                 return _self._thread_target(*_args, **kwargs)
+            except Exception as ex:
+                _self.exception_info = (type(ex), ex, ex.__traceback__, _self)
             finally:
                 if _self.stop_callback and _self.is_stopped():
                     _self.stop_callback()
@@ -69,3 +72,18 @@ class Thread(threading.Thread):
         libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
     def get_stop_control(self):
         return self.stop_control
+    def join(self):
+        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
+        super().join()
+        if self.exception_info:
+            exctype, value, tb, thread = self.exception_info
+            import traceback
+            print("traceback")
+            traceback.print_tb(tb)
+            print(f"exctype {exctype} value {value} tb {tb} thread {thread}")
+            if exctype is type(None):
+                raise exctype
+            if callable(exctype):
+                raise exctype(value)
+            raise exctype
+        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
