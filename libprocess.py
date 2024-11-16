@@ -32,14 +32,18 @@ class Process:
         self.shell = shell
         self.fout = None
         self.ferr = None
+        self.stdout_lines = []
+        self.stderr_lines = []
         self.timeout = timeout
         def callback(state, lines):
             if state == "stdout":
-                log.info(lines)
+                log.info("".join(lines[len(self.stdout_lines):]))
+                self.stdout_lines = self.stdout_lines + lines
             elif state == "stderr":
-                log.error(lines)
+                log.error("".join(lines[len(self.stderr_lines):]))
+                self.stderr_lines = self.stderr_lines + lines
             else:
-                log.debug(lines)
+                log.info(f"Returncode: {lines}")
         self.processthread = libprocessmonitor.ProcessMonitor(self, callback)
     def was_stopped(self):
         return self.is_destroyed_flag
@@ -82,6 +86,10 @@ class Process:
         return hasattr(self.process, "stdout")
     def has_stdout(self):
         return self.is_stdout()
+    def get_stderr_lines_copy(self):
+        return self.stderr_lines.copy()
+    def get_stdout_lines_copy(self):
+        return self.stdout_lines.copy()
     def get_stderr(self):
         if self.ferr:
             self.ferr.seek(0)

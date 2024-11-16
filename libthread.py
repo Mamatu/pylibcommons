@@ -78,9 +78,7 @@ class Thread(threading.Thread):
         if self.exception_info:
             exctype, value, tb, thread = self.exception_info
             import traceback
-            print("traceback")
             traceback.print_tb(tb)
-            print(f"exctype {exctype} value {value} tb {tb} thread {thread}")
             if exctype is type(None):
                 raise exctype
             if callable(exctype):
