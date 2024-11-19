@@ -187,7 +187,7 @@ def get_func_args(**kwargs):
 def limit_length(arg, **kwargs):
     arg_length_limit = libkw.handle_kwargs("arg_length_limit", default_output = 100, **kwargs)
     if arg_length_limit is not None:
-        if len(arg) > arg_length_limit:
+        if len(arg) > arg_length_limit + 3:
             return f"{arg[:arg_length_limit]}..."
     return arg
 
