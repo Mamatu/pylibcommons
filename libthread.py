@@ -72,16 +72,23 @@ class Thread(threading.Thread):
         libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
     def get_stop_control(self):
         return self.stop_control
-    def join(self):
-        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
-        super().join()
+    @libprint.func_info(logger = log.debug)
+    def handle_exception_from_thread(self, raise_exception = True):
         if self.exception_info:
             exctype, value, tb, thread = self.exception_info
+            def _raise_exception():
+                exception_callstack = "".join(traceback.format_exception(exctype, value, tb))
+                libprint.print_func_info(logger = log.error, extra_string = f"{thread} exception: {exception_callstack}")
+                if raise_exception:
+                    raise exctype
             import traceback
             traceback.print_tb(tb)
             if exctype is type(None):
-                raise exctype
+                _raise_exception()
             if callable(exctype):
-                raise exctype(value)
-            raise exctype
-        libprint.print_func_info(logger = log.debug, extra_string = self.thread_name)
+                _raise_exception()
+            _raise_exception()
+    @libprint.func_info(logger = log.debug)
+    def join(self, raise_exception = False):
+        super().join()
+        self.handle_exception_from_thread(raise_exception = raise_exception)
