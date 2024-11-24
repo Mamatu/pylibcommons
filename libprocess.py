@@ -51,6 +51,7 @@ class Process:
         return self.is_destroyed_flag
     def emit_warning_during_destroy(self, ex):
         libprint.print_func_info(logger = log.warning, extra_string = f"{ex}: please verify if process {self.cmd} was properly closed")
+    @libprint.func_info(logger = log.debug)
     def start(self):
         if self.process:
             raise Exception(f"Process {self.cmd} already started {self.process}")
@@ -106,18 +107,16 @@ class Process:
         if self.process is None:
             return None
         return self.process.stdout
+    @libprint.func_info(logger = log.debug)
     def stop(self):
-        libprint.print_func_info(prefix = "+", logger = log.debug, extra_string = f"Stop process {self.cmd} {self.process}")
-        try:
-            self.processthread.get_stop_control().stop()
-            self.is_destroyed_flag = True
-            if not hasattr(self, "process"):
-                return
-            if self.process is None:
-                return
-            self.cleanup()
-        finally:
-            libprint.print_func_info(prefix = "-", logger = log.debug, extra_string = f"Stop process {self.cmd} {self.process}")
+        self.processthread.get_stop_control().stop()
+        self.is_destroyed_flag = True
+        if not hasattr(self, "process"):
+            return
+        if self.process is None:
+            return
+        self.cleanup()
+    @libprint.func_info(logger = log.debug)
     def cleanup(self):
         libprint.print_func_info(logger = log.debug, extra_string = f"Cleanup process {self.process}")
         try:
