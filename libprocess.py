@@ -120,7 +120,7 @@ class Process:
     def cleanup(self):
         libprint.print_func_info(logger = log.debug, extra_string = f"Cleanup process {self.process}")
         try:
-            import libterminate
+            from pylibcommons import libterminate
             libterminate.terminate_process_and_children(self.process)
             self.process = None
         except psutil.NoSuchProcess as nsp:
