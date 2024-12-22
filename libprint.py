@@ -16,6 +16,24 @@ def print_func_info(**kwargs):
     kwargs["level"] = level + 1
     logger(get_func_info(**kwargs))
 
+_global_strings = []
+
+def add_global_string(string):
+    global _global_strings
+    _global_strings.append(string)
+
+def clear_global_string():
+    global _global_strings
+    _global_strings = []
+
+def set_global_string(string):
+    clear_global_string()
+    add_global_string(string)
+
+def get_global_strings():
+    global _global_strings
+    return _global_strings.copy()
+
 def setup_logger(logger):
     import logging
     import sys
@@ -28,6 +46,17 @@ def setup_logger(logger):
         logger = logging.getLogger(logger)
     logger.addHandler(create_handler(sys.stdout, logging.DEBUG, lambda record: record.levelno <= logging.INFO))
     logger.addHandler(create_handler(sys.stderr, logging.WARN, lambda record: record.levelno > logging.INFO))
+
+def func_info(logger = print):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            print_func_info(prefix = "+", logger = logger, function_name = f"{func.__name__}@wrapper", print_filename = False, print_linenumber = False)
+            try:
+                return func(*args, **kwargs)
+            finally:
+                print_func_info(prefix = "-", logger = logger, function_name = f"{func.__name__}@wrapper", print_filename = False, print_linenumber = False)
+        return wrapper
+    return decorator
 
 def class_debug_prints(**kwargs):
     """
@@ -158,7 +187,7 @@ def get_func_args(**kwargs):
 def limit_length(arg, **kwargs):
     arg_length_limit = libkw.handle_kwargs("arg_length_limit", default_output = 100, **kwargs)
     if arg_length_limit is not None:
-        if len(arg) > arg_length_limit:
+        if len(arg) > arg_length_limit + 3:
             return f"{arg[:arg_length_limit]}..."
     return arg
 
@@ -203,7 +232,7 @@ def get_func_info(**kwargs):
     lineno = libkw.handle_kwargs("lineno", default_output = None, **kwargs)
     prefix = libkw.handle_kwargs("prefix", default_output = None, **kwargs)
     args = libkw.handle_kwargs("args", default_output = None, **kwargs)
-    print_current_time = libkw.handle_kwargs("print_current_time", default_output = False, **kwargs)
+    print_current_time = libkw.handle_kwargs("print_current_time", default_output = True, **kwargs)
     ct = ""
     if print_current_time:
         ct = datetime.datetime.now()
@@ -239,6 +268,9 @@ def get_func_info(**kwargs):
         if output:
             output = f"{output} "
         output = f"{output}{extra_string}"
+    gs = get_global_strings()
+    if len(gs) > 0:
+        output = f"{'|'.join(gs)} {output}"
     return output
 
 class _ArgName:

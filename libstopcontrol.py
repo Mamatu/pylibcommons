@@ -1,8 +1,17 @@
+__author__ = "Marcin Matula"
+__copyright__ = "Copyright (C) 2022, Marcin Matula"
+__credits__ = ["Marcin Matula"]
+__license__ = "Apache License"
+__version__ = "2.0"
+__maintainer__ = "Marcin Matula"
+
 import concurrent.futures as concurrent
+import threading
 
 class StopControl:
     def __init__(self):
         self.threads_with_stop = []
+        self.lock = threading.RLock()
         self._executor = None
     def add(self, thread):
         def check(thread):
@@ -13,18 +22,28 @@ class StopControl:
             if not hasattr(thread, "is_stopped"):
                 raise Exception("thread must have is_stopped method")
         check(thread)
-        self.threads_with_stop.append(thread)
+        with self.lock:
+            self.threads_with_stop.append(thread)
     def wait_for_stop(self, timeout = None):
-        for thread in self.threads_with_stop:
+        tws = []
+        with self.lock:
+            tws = self.threads_with_stop.copy()
+        for thread in tws:
             thread.wait_for_stop(timeout = timeout)
     def is_stopped(self):
-        for thread in self.threads_with_stop:
+        tws = []
+        with self.lock:
+            tws = self.threads_with_stop.copy()
+        for thread in tws:
             if thread.is_stopped() is False:
                 return False
         return True
     def stop(self):
         def stop_single(self, index):
-            self.threads_with_stop[index].stop()
+            thread = None
+            with self.lock:
+                thread = self.threads_with_stop[index]
+            thread.stop()
         if self._executor is None:
             self._executor = concurrent.ThreadPoolExecutor(max_workers = len(self.threads_with_stop))
         futures = [self._executor.submit(stop_single, self, index) for index, t in enumerate(self.threads_with_stop)]
