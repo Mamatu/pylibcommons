@@ -30,6 +30,7 @@ class _Server:
         from multiprocessing.connection import Client
         client = Client(self.address)
         client.close()
+        self.listener.close()
     def wait_for_finish(self):
         with self.cv:
             while not self.stopped:
