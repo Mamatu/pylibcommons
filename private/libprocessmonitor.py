@@ -1,4 +1,4 @@
-from pylibcommons import libthread, libprint
+from pylibcommons import libthread
 
 class ProcessMonitor(libthread.Thread):
     def __init__(self, process, callback):
