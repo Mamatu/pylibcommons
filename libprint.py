@@ -10,6 +10,16 @@ from pylibcommons import libkw
 
 import datetime
 
+_print_current_time = True
+
+def enable_print_current_time():
+    global _print_current_time
+    _print_current_time = True
+
+def disable_print_current_time():
+    global _print_current_time
+    _print_current_time = False
+
 def print_func_info(**kwargs):
     level = libkw.handle_kwargs("level", default_output = 1, **kwargs)
     logger = libkw.handle_kwargs("logger", default_output = print, **kwargs)
@@ -222,6 +232,7 @@ def convert_args_to_str(**kwargs):
     return ", ".join(args)
 
 def get_func_info(**kwargs):
+    global _print_current_time
     level = libkw.handle_kwargs("level", default_output = 1, **kwargs)
     print_filename = libkw.handle_kwargs("print_filename", default_output = True, **kwargs)
     print_linenumber = libkw.handle_kwargs("print_linenumber", default_output = True, **kwargs)
@@ -232,7 +243,7 @@ def get_func_info(**kwargs):
     lineno = libkw.handle_kwargs("lineno", default_output = None, **kwargs)
     prefix = libkw.handle_kwargs("prefix", default_output = None, **kwargs)
     args = libkw.handle_kwargs("args", default_output = None, **kwargs)
-    print_current_time = libkw.handle_kwargs("print_current_time", default_output = True, **kwargs)
+    print_current_time = libkw.handle_kwargs("print_current_time", default_output = _print_current_time, **kwargs)
     ct = ""
     if print_current_time:
         ct = datetime.datetime.now()
