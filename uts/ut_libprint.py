@@ -177,7 +177,13 @@ def test_print_global_strings(capsys):
         libprint.print_func_info()
     foo(alpha = 1, beta = 2, gamma = "0123456789")
     captured = capsys.readouterr()
-    assert "test_print_global_strings foo (alpha = 1, beta = 2, gamma = \'0123456789\') /home/mmatula/pylibcommons/uts/ut_libprint.py:177\n" == captured.out
+    expected = ["test_print_global_strings foo (alpha = 1, beta = 2, gamma = \'0123456789\') .*/pylibcommons/uts/ut_libprint.py:177\n"]
+    out = captured.out
+    out = out.split("\n")
+    out.remove('')
+    assert len(out) == len(expected)
+    for line in zip(expected, out):
+        assert libgrep.grep_in_text(line[1], line[0])
 
 #def test_func_info(capsys):
 #    class Foo:
