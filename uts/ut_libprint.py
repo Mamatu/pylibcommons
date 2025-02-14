@@ -6,9 +6,12 @@ __version__ = "2.0"
 __maintainer__ = "Marcin Matula"
 
 from pylibcommons import libprint, libgrep
+import os
+
+def setup_function(function):
+    os.environ["PYLIBCOMMONS_PRINT_CURRENT_TIME"] = "0"
 
 def test_print_func_info_1(capsys):
-    libprint.disable_print_current_time()
     def foo(x, b):
         libprint.print_func_info(print_filename = False, print_linenumber = False)
     foo("a", "b")
@@ -16,7 +19,6 @@ def test_print_func_info_1(capsys):
     assert "foo (x = 'a', b = 'b')\n" == captured.out
 
 def test_print_func_info_2(capsys):
-    libprint.disable_print_current_time()
     def foo():
         libprint.print_func_info(print_filename = False, print_linenumber = False)
     foo()
@@ -24,7 +26,6 @@ def test_print_func_info_2(capsys):
     assert "foo ()\n" == captured.out
 
 def test_print_func_info_3(capsys):
-    libprint.disable_print_current_time()
     def foo(alpha, **kwargs):
         libprint.print_func_info(print_filename = False, print_linenumber = False)
     foo(alpha = 1, beta = 2, gamma = 3)
@@ -32,7 +33,6 @@ def test_print_func_info_3(capsys):
     assert "foo (alpha = 1, beta = 2, gamma = 3)\n" == captured.out
 
 def test_print_func_info_4(capsys):
-    libprint.disable_print_current_time()
     def foo(alpha, *args, **kwargs):
         libprint.print_func_info(print_filename = False, print_linenumber = False)
     foo(1, 4, 5,  beta = 2, gamma = 3)
@@ -145,14 +145,15 @@ def test_print_func_info_with_current_time_1(capsys):
         assert "2022-01-29 20:54:54.000000 foo (alpha = 1, 4, 5, beta = 2, gamma = 3)\n" == captured.out
 
 def test_print_no_function(capsys):
+    os.environ["PYLIBCOMMONS_PRINT_CURRENT_TIME"] = "1"
     def foo(x, b):
         libprint.print_func_info(print_function = False)
     foo("a", "b")
     captured = capsys.readouterr()
-    expected = "pylibcommons/uts/ut_libprint.py:149\n"
+    expected = "pylibcommons/uts/ut_libprint.py:150\n"
     out = str(captured.out)
     out = out[len(out) - len(expected):]
-    assert "pylibcommons/uts/ut_libprint.py:149\n" in out
+    assert "pylibcommons/uts/ut_libprint.py:150\n" in out
 
 def test_print_extra_string_with_current_time(capsys):
     with mocked_now(datetime.datetime(2022, 1, 29, hour = 20, minute = 54, second = 54, microsecond = 000000)):
@@ -163,7 +164,6 @@ def test_print_extra_string_with_current_time(capsys):
         assert "2022-01-29 20:54:54.000000 test\n" == captured.out
 
 def test_print_func_info_args_chars_limit(capsys):
-    libprint.disable_print_current_time()
     def foo(alpha, **kwargs):
         libprint.print_func_info(print_filename = False, print_linenumber = False, arg_length_limit = 5)
     foo(alpha = 1, beta = 2, gamma = "0123456789")
@@ -171,7 +171,6 @@ def test_print_func_info_args_chars_limit(capsys):
     assert "foo (alpha = 1, beta = 2, gamma = \'01234...\')\n" == captured.out
 
 def test_print_global_strings(capsys):
-    libprint.disable_print_current_time()
     libprint.set_global_string("test_print_global_strings")
     def foo(alpha, **kwargs):
         libprint.print_func_info()

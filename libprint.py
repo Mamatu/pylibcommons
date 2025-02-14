@@ -9,16 +9,23 @@ import inspect
 from pylibcommons import libkw
 
 import datetime
+import os
+import threading
 
-_print_current_time = True
+def is_enabled_print_current_time(**kwargs):
+    print_current_time = libkw.handle_kwargs("print_current_time", default_output = False, **kwargs)
+    if print_current_time:
+        return True
+    print_current_time = int(os.environ.get("PYLIBCOMMONS_PRINT_CURRENT_TIME", 0))
+    if print_current_time == 1:
+        return True
+    return False
 
-def enable_print_current_time():
-    global _print_current_time
-    _print_current_time = True
-
-def disable_print_current_time():
-    global _print_current_time
-    _print_current_time = False
+def is_enabled_print_thread_id():
+    print_current_time = int(os.environ.get("PYLIBCOMMONS_PRINT_THREAD_ID", 0))
+    if print_current_time == 1:
+        return True
+    return False
 
 def print_func_info(**kwargs):
     level = libkw.handle_kwargs("level", default_output = 1, **kwargs)
@@ -232,7 +239,6 @@ def convert_args_to_str(**kwargs):
     return ", ".join(args)
 
 def get_func_info(**kwargs):
-    global _print_current_time
     level = libkw.handle_kwargs("level", default_output = 1, **kwargs)
     print_filename = libkw.handle_kwargs("print_filename", default_output = True, **kwargs)
     print_linenumber = libkw.handle_kwargs("print_linenumber", default_output = True, **kwargs)
@@ -243,12 +249,9 @@ def get_func_info(**kwargs):
     lineno = libkw.handle_kwargs("lineno", default_output = None, **kwargs)
     prefix = libkw.handle_kwargs("prefix", default_output = None, **kwargs)
     args = libkw.handle_kwargs("args", default_output = None, **kwargs)
-    print_current_time = libkw.handle_kwargs("print_current_time", default_output = _print_current_time, **kwargs)
+    print_current_time = is_enabled_print_current_time(**kwargs)
+    print_thread_id = is_enabled_print_thread_id()
     ct = ""
-    if print_current_time:
-        ct = datetime.datetime.now()
-        ct = ct.strftime("%Y-%m-%d %H:%M:%S.%f")
-        ct = f"{ct}"
     if args is None:
         kwargs_1 = kwargs.copy()
         kwargs_1["level"] = level + 1
@@ -280,8 +283,15 @@ def get_func_info(**kwargs):
             output = f"{output} "
         output = f"{output}{extra_string}"
     gs = get_global_strings()
+    if print_current_time:
+        ct = datetime.datetime.now()
+        ct = ct.strftime("%Y-%m-%d %H:%M:%S.%f")
+        output = f"{ct} {output}"
     if len(gs) > 0:
         output = f"{'|'.join(gs)} {output}"
+    if print_thread_id:
+        tid = threading.current_thread().ident
+        output = f"{output} {tid}"
     return output
 
 class _ArgName:
