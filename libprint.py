@@ -291,7 +291,7 @@ def get_func_info(**kwargs):
         output = f"{'|'.join(gs)} {output}"
     if print_thread_id:
         tid = threading.current_thread().ident
-        output = f"{output} {tid}"
+        output = f"{output} tid = {tid}"
     return output
 
 class _ArgName:
