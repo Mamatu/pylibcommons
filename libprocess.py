@@ -139,9 +139,9 @@ class Process:
         if not self.process:
             raise Exception("Process is not started")
         libprint.print_func_info(logger = log.debug, print_current_time = True)
-        exception_on_error = libkw.handle_kwargs("exception_on_error", default_output = False, **kwargs)
-        print_stdout = libkw.handle_kwargs("print_stdout", default_output = False, **kwargs)
-        print_stderr = libkw.handle_kwargs("print_stderr", default_output = False, **kwargs)
+        exception_on_error = libkw.handle_kwargs("exception_on_error", default_output = True, **kwargs)
+        print_stdout = libkw.handle_kwargs("print_stdout", default_output = True, **kwargs)
+        print_stderr = libkw.handle_kwargs("print_stderr", default_output = True, **kwargs)
         check_error_timeout = libkw.handle_kwargs("check_error_timeout", default_output = None, **kwargs)
         if isinstance(check_error_timeout, int) and check_error_timeout == 0:
             check_error_timeout = None
