@@ -38,8 +38,10 @@ class Process:
         def callback(state, lines):
             if state == "stdout":
                 self.stdout_lines = lines
+                libprint.print_func_info(logger = log.info, extra_string = f"Process {self.cmd} stdout: {lines}")
             elif state == "stderr":
                 self.stderr_lines = lines
+                libprint.print_func_info(logger = log.error, extra_string = f"Process {self.cmd} stderr: {lines}")
             else:
                 log.info(f"Returncode: {lines}")
         self.processthread = libprocessmonitor.ProcessMonitor(self, callback)
