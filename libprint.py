@@ -36,7 +36,6 @@ def print_func_info(**kwargs):
 _global_strings = []
 
 def add_global_string(string):
-    global _global_strings
     _global_strings.append(string)
 
 def clear_global_string():
@@ -48,7 +47,6 @@ def set_global_string(string):
     add_global_string(string)
 
 def get_global_strings():
-    global _global_strings
     return _global_strings.copy()
 
 def setup_logger(logger):
