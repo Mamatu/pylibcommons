@@ -224,7 +224,7 @@ def __grep(path, regex, **kwargs):
     try:
         if can_be_processed:
             def _process():
-                nonlocal out, debug_cat
+                nonlocal out
                 _log.debug(f"{grep.__name__}: {command}")
                 if debug_cat:
                     __cat(command, path)

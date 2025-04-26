@@ -38,8 +38,10 @@ class Process:
         def callback(state, lines):
             if state == "stdout":
                 self.stdout_lines = lines
+                libprint.print_func_info(logger = log.info, extra_string = f"Process {self.cmd} stdout: {lines}")
             elif state == "stderr":
                 self.stderr_lines = lines
+                libprint.print_func_info(logger = log.error, extra_string = f"Process {self.cmd} stderr: {lines}")
             else:
                 log.info(f"Returncode: {lines}")
         self.processthread = libprocessmonitor.ProcessMonitor(self, callback)
@@ -157,10 +159,8 @@ class Process:
                     return lines
             return ""
         def handle_stderr(self):
-            nonlocal print_stderr
             return handle_stream(self, print_stderr, self.is_stderr, self.get_stderr, log.error)
         def handle_stdout(self):
-            nonlocal print_stdout
             return handle_stream(self, print_stdout, self.is_stdout, self.get_stdout, log.info)
         try:
             def handle_stds(self):
