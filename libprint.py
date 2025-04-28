@@ -33,6 +33,14 @@ def print_func_info(**kwargs):
     kwargs["level"] = level + 1
     logger(get_func_info(**kwargs))
 
+def print_progress(iteration, total, prefix = '', length = 100, fill = '█', print_end = '\r'):
+    import sys
+    percent = ("{0:.1f}").format(100 * (iteration / float(total)))
+    filled_length = int(length * iteration // total)
+    bar = fill * filled_length + '-' * (length - filled_length)
+    sys.stdout.write(f'\r{prefix} |{bar}| {percent}%')
+    sys.stdout.flush()
+
 _global_strings = []
 
 def add_global_string(string):

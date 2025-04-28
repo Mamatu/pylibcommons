@@ -184,6 +184,14 @@ def test_print_global_strings(capsys):
     for line in zip(expected, out):
         assert libgrep.grep_in_text(line[1], line[0])
 
+def test_progress():
+    import time
+    libprint.print_progress(0, 10)
+    time.sleep(0.5)
+    libprint.print_progress(5, 10)
+    time.sleep(0.5)
+    libprint.print_progress(10, 10)
+
 #def test_func_info(capsys):
 #    class Foo:
 #        @libprint.func_info()
