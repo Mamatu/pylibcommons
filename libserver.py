@@ -34,6 +34,9 @@ class _Server:
         libprint.print_func_info(prefix = "-", logger = log.debug)
     def stop(self):
         libprint.print_func_info(logger = log.debug, extra_string = f"Stop server: {self.address}")
+        if self.stopped:
+            libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"Server already stopped: {self.address}")
+            return
         self.stopped = True
         from multiprocessing.connection import Client
         client = Client(self.address)
