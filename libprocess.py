@@ -175,7 +175,7 @@ class Process:
                 except subprocess.TimeoutExpired:
                     pass
                 _stdout, _stderr = handle_stds(self)
-            if callback_on_error is not None:
+            if callback_on_error is not None and returncode != 0:
                 if isinstance(callback_on_error, dict):
                     callback_on_error = callback_on_error.get(returncode, None)
                     if callback_on_error is not None:
