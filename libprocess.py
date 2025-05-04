@@ -142,6 +142,7 @@ class Process:
             raise Exception("Process is not started")
         libprint.print_func_info(logger = log.debug, print_current_time = True)
         exception_on_error = libkw.handle_kwargs("exception_on_error", default_output = False, **kwargs)
+        callback_on_error = libkw.handle_kwargs("callback_on_error", default_output = None, **kwargs)
         print_stdout = libkw.handle_kwargs("print_stdout", default_output = False, **kwargs)
         print_stderr = libkw.handle_kwargs("print_stderr", default_output = False, **kwargs)
         check_error_timeout = libkw.handle_kwargs("check_error_timeout", default_output = None, **kwargs)
@@ -174,6 +175,13 @@ class Process:
                 except subprocess.TimeoutExpired:
                     pass
                 _stdout, _stderr = handle_stds(self)
+            if callback_on_error is not None:
+                if isinstance(callback_on_error, dict):
+                    callback_on_error = callback_on_error.get(returncode, None)
+                    if callback_on_error is not None:
+                        return callback_on_error(returncode, _stdout, _stderr)
+                elif callable(callback_on_error):
+                    return callback_on_error(returncode, _stdout, _stderr)
             if exception_on_error and returncode != 0:
                 raise Process.ReturnCodeException(self.cmd, returncode, _stdout, _stderr)
         finally:
