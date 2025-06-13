@@ -5,7 +5,7 @@ __license__ = "Apache License"
 __version__ = "2.0"
 __maintainer__ = "Marcin Matula"
 
-from pylibcommons import libprint
+from pylibcommons import libprint, libthread
 import logging
 import threading
 
@@ -28,8 +28,7 @@ class _Server:
         self.stopped = False
         from multiprocessing.connection import Listener
         self.listener = Listener(address)
-        self.thread = threading.Thread(target = _Server.run_server, args = [self, handler, address])
-        self.thread.daemon = True
+        self.thread = libthread.Thread(target = _Server.run_server, args = [self, handler, address])
         self.thread.start()
         libprint.print_func_info(prefix = "-", logger = log.debug)
     def stop(self):
@@ -39,15 +38,13 @@ class _Server:
             return
         self.stopped = True
         from multiprocessing.connection import Client
-        client = Client(self.address)
-        client.close()
+        with Client(self.address) as client:
+            client.close()
         self.listener.close()
     def wait_for_finish(self):
-        with self.cv:
-            while not self.stopped:
-                self.cv.wait()
+        self.thread.join()
     @staticmethod
-    def run_server(self, handler, address):
+    def run_server(self, handler, address, stop_control):
         libprint.print_func_info(prefix = "+", logger = log.debug)
         try:
             def call(callback):
@@ -67,6 +64,7 @@ class _Server:
                         libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"-client {client}.recv")
                         output = handler(line, client)
                         if isinstance(output, StopExecution) or output == StopExecution:
+                            self.stop()
                             libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "Stop execution")
                             return
                 except EOFError as eof:
@@ -82,6 +80,7 @@ class _Server:
                     if self.stopped: break
                     libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "-listener.accept")
                     futures.append(executor.submit(thread_client, conn, self))
+                    libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"futures count: {len(futures)}")
                 for f in futures: f.result()
         finally:
             libprint.print_func_info(prefix = "-", logger = log.debug)
