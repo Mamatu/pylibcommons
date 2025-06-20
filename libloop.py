@@ -18,7 +18,14 @@ class TimeoutException(Exception):
 def while_with_timeout(timeout, condition, timeout_msg = None, time_sleep = 0.1):
     start_time = time.time()
     timeouted = False
-    while condition():
+    while True:
+        status = condition()
+        output = None
+        if isinstance(status, tuple):
+            status = status[0]
+            output = status[1]
+        if not status:
+            return output
         time_time = time.time()
         if time_time - start_time >= timeout:
             timeouted = True

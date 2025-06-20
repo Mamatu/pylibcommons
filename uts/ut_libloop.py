@@ -18,4 +18,4 @@ def test_while_with_timeout(time_time_mock, time_sleep_mock):
         def condition():
             return True
         libloop.while_with_timeout(timeout = 1, condition = lambda: True, time_sleep = 0.7)
-        time_sleep_mock.assert_has_calls([call(0.7), call(0.3)])
+    time_sleep_mock.assert_has_calls([mock.call(0.7), mock.call(1 - 0.7)])
