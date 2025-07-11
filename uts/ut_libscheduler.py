@@ -10,18 +10,64 @@ import logging
 log = logging.getLogger(__name__)
 
 from pylibcommons.libscheduler import schedule_jobs
+import threading
+
+def test_multiprocessing_1():
+    class Process:
+        def __init__(self):
+            print(f"DEBUG__ TSJ Process __init__ {id(self)}")
+            self.is_started = False
+        def start(self):
+            print(f"DEBUG__ TSJ Process start {id(self)}")
+            self.is_started = True
+    import multiprocessing as mp
+    process = Process()
+    def func(process):
+        process.start()
+    mpProcess = mp.Process(target = func, args = (process,))
+    mpProcess.start()
+    mpProcess.join()
+    assert process.is_started
+
+def test_multiprocessing_2():
+    class Process:
+        def __init__(self):
+            print(f"DEBUG__ TSJ Process __init__ {id(self)}")
+            self.is_started = False
+        def start(self):
+            print(f"DEBUG__ TSJ Process start {id(self)}")
+            self.is_started = True
+    import multiprocessing as mp
+    process = Process()
+    def func(process):
+        process.start()
+        return process
+    with mp.Pool(1) as pool:
+        process = pool.map(func, [process])
+    assert process.is_started
 
 def test_schedule_jobs_1():
     class Process:
         def __init__(self):
             self.is_started = False
             self.is_waited = False
+            self.lock = threading.Lock()
         def start(self):
-            self.is_started = True
+            with self.lock:
+                self.is_started = True
+                print(f"DEBUG__ TSJ {self} {self.is_started}")
         def wait(self, **kwargs):
             self.is_waited = True
+        def stop(self):
+            pass
+        def wait_for_stop(self, timeout = None):
+            pass
+        def is_stopped(self):
+            return False
     processes = [Process()]
+    print(f"DEBUG__ TSJ {processes[0]}")
     schedule_jobs(processes, 1)
+    print(f"DEBUG__ TSJ {processes[0]}")
     assert processes[0].is_started
     assert processes[0].is_waited
 
