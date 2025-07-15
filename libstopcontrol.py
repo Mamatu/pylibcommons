@@ -9,9 +9,9 @@ import concurrent.futures as concurrent
 import threading
 
 class StopControl:
-    def __init__(self):
+    def __init__(self, lock = threading.RLock()):
         self.threads_with_stop = []
-        self.lock = threading.RLock()
+        self.lock = lock
         self._executor = None
     def add(self, thread):
         def check(thread):
@@ -35,7 +35,7 @@ class StopControl:
         with self.lock:
             tws = self.threads_with_stop.copy()
         for thread in tws:
-            if thread.is_stopped() is False:
+            if not thread.is_stopped():
                 return False
         return True
     def stop(self):

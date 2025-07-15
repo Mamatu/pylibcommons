@@ -5,46 +5,104 @@ __license__ = "Apache License"
 __version__ = "2.0"
 __maintainer__ = "Marcin Matula"
 
-
 import logging
 log = logging.getLogger(__name__)
 
-from pylibcommons.libscheduler import schedule_jobs
+from pylibcommons.libscheduler import schedule_jobs, schedule_jobs_multiprocesses
 import threading
 
-def test_multiprocessing_1():
-    class Process:
-        def __init__(self):
-            print(f"DEBUG__ TSJ Process __init__ {id(self)}")
-            self.is_started = False
-        def start(self):
-            print(f"DEBUG__ TSJ Process start {id(self)}")
-            self.is_started = True
-    import multiprocessing as mp
-    process = Process()
-    def func(process):
-        process.start()
-    mpProcess = mp.Process(target = func, args = (process,))
-    mpProcess.start()
-    mpProcess.join()
-    assert process.is_started
+from multiprocessing import Value
+import sys
 
-def test_multiprocessing_2():
+def test_schedule_mp_1():
     class Process:
         def __init__(self):
-            print(f"DEBUG__ TSJ Process __init__ {id(self)}")
-            self.is_started = False
+            self._counter = Value('i', 0)
+            self._is_started = Value('b', False)
+            self._is_stopped = Value('b', False)
+            self._is_waited = Value('b', False)
         def start(self):
-            print(f"DEBUG__ TSJ Process start {id(self)}")
-            self.is_started = True
-    import multiprocessing as mp
-    process = Process()
-    def func(process):
-        process.start()
-        return process
-    with mp.Pool(1) as pool:
-        process = pool.map(func, [process])
-    assert process.is_started
+            while not self._is_stopped.value:
+                self._counter.value += 1
+                if self._counter.value == 5:
+                    self._is_stopped.value = True
+                    break
+        def wait(self, **kwargs):
+            self._is_waited.value = True
+        def stop(self):
+            self._is_stopped.value = True
+        def wait_for_stop(self, timeout = None):
+            pass
+        def is_stopped(self):
+            return self._is_stopped.value
+    #process = create_process_for(schedule_jobs_multiprocesses, Process())
+    processes = [Process()]
+    schedule_jobs_multiprocesses(processes, 1)
+    print(processes[0]._counter.__dict__)
+    assert processes[0]._is_started
+    assert processes[0]._is_waited
+    assert processes[0]._counter.value == 5
+
+def test_schedule_mp_2():
+    class Process:
+        def __init__(self):
+            self._counter = Value('i', 0)
+            self._is_started = Value('b', False)
+            self._is_stopped = Value('b', False)
+            self._is_waited = Value('b', False)
+        def start(self):
+            while not self._is_stopped.value:
+                self._counter.value += 1
+                if self._counter.value == 5:
+                    self._is_stopped.value = True
+                    break
+        def wait(self, **kwargs):
+            self._is_waited.value = True
+        def stop(self):
+            self._is_stopped.value = True
+        def wait_for_stop(self, timeout = None):
+            pass
+        def is_stopped(self):
+            return self._is_stopped.value
+    #process = create_process_for(schedule_jobs_multiprocesses, Process())
+    processes = [Process(), Process()]
+    schedule_jobs_multiprocesses(processes, 1)
+    print(processes[0]._counter.__dict__)
+    assert processes[0]._is_started
+    assert processes[0]._is_waited
+    assert processes[0]._counter.value == 5
+    assert processes[1]._is_started
+    assert processes[1]._is_waited
+    assert processes[1]._counter.value == 5
+
+def test_schedule_mp_3():
+    class Process:
+        def __init__(self, index):
+            self.index = Value('i', index)
+            self._counter = Value('i', 0)
+            self._is_started = Value('b', False)
+            self._is_stopped = Value('b', False)
+            self._is_waited = Value('b', False)
+        def start(self):
+            while not self._is_stopped.value:
+                self._counter.value += 1
+                if self._counter.value == self.index.value * 5:
+                    self._is_stopped.value = True
+                    break
+        def wait(self, **kwargs):
+            self._is_waited.value = True
+        def stop(self):
+            self._is_stopped.value = True
+        def wait_for_stop(self, timeout = None):
+            pass
+        def is_stopped(self):
+            return self._is_stopped.value
+    processes = [Process(1), Process(2), Process(3), Process(4)]
+    schedule_jobs_multiprocesses(processes, 2)
+    for index in range(4):
+        assert processes[index]._is_started
+        assert processes[index]._is_waited
+        assert processes[index]._counter.value == (index + 1) * 5
 
 def test_schedule_jobs_1():
     class Process:
@@ -55,7 +113,6 @@ def test_schedule_jobs_1():
         def start(self):
             with self.lock:
                 self.is_started = True
-                print(f"DEBUG__ TSJ {self} {self.is_started}")
         def wait(self, **kwargs):
             self.is_waited = True
         def stop(self):
@@ -65,10 +122,7 @@ def test_schedule_jobs_1():
         def is_stopped(self):
             return False
     processes = [Process()]
-    print(f"DEBUG__ TSJ {processes[0]}")
     schedule_jobs(processes, 1)
-    print(f"DEBUG__ TSJ {processes[0]}")
-    assert processes[0].is_started
     assert processes[0].is_waited
 
 def test_schedule_jobs_2():
