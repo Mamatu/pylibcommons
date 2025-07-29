@@ -10,10 +10,10 @@ log = logging.getLogger(__name__)
 
 from pylibcommons import  libkw, libprint, libthread, libstopcontrol
 import threading
-import multiprocessing as mp
 import traceback
 
-from multiprocessing import Value
+import multiprocessing as mp
+import concurrent.futures as concurrent
 
 def schedule_jobs(processes, jobs_count, process_filter = lambda process: process, **kwargs):
     def target(lock, index, processes, process_filter, print_stderr, print_stdout, exception_on_error, stop_on_exception, log, exceptions, stop_control):
@@ -135,9 +135,12 @@ def schedule_jobs_multiprocesses(processes, jobs_count, process_filter = lambda 
         threads.append(mp.Process(target = target, args = args_list_copy))
     for thread in threads:
         thread.start()
+    _executor = concurrent.ThreadPoolExecutor(max_workers = len(processes))
+    futures = []
     for index, thread in enumerate(threads):
-        parent_conn = communications[index][0]
-        handle_recv(parent_conn)
+        futures.append(_executor.submit(handle_recv, communications[index][0]))
+    for future in futures:
+        future.result()
     for thread in threads:
         thread.join()
     return exceptions
