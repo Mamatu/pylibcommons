@@ -25,7 +25,6 @@ class _Server:
         self.lock = threading.Lock()
         self.cv = threading.Condition(self.lock)
         self.address = address
-        self.stopped = False
         from multiprocessing.connection import Listener
         self.listener = Listener(address)
         self.thread = libthread.Thread(target = _Server.run_server, args = [self, handler, address])
@@ -33,10 +32,10 @@ class _Server:
         libprint.print_func_info(prefix = "-", logger = log.debug)
     def stop(self):
         libprint.print_func_info(logger = log.debug, extra_string = f"Stop server: {self.address}")
-        if self.stopped:
+        if self.thread.is_stopped():
             libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"Server already stopped: {self.address}")
             return
-        self.stopped = True
+        self.thread.stop()
         from multiprocessing.connection import Client
         with Client(self.address) as client:
             client.close()
@@ -53,7 +52,7 @@ class _Server:
             def thread_client(client, self):
                 libprint.print_func_info(prefix = "+", logger = log.debug, extra_string = f"{client}")
                 try:
-                    while not self.stopped:
+                    while not stop_control.is_stopped():
                         libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"+client {client}.recv")
                         line = None
                         try:
@@ -74,10 +73,10 @@ class _Server:
                     libprint.print_func_info(prefix = "-", logger = log.debug, extra_string = f"{client}")
             with concurrent.ThreadPoolExecutor() as executor:
                 futures = []
-                while not self.stopped:
+                while not self.thread.is_stopped():
                     libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "+listener.accept")
                     conn = self.listener.accept()
-                    if self.stopped: break
+                    if self.thread.is_stopped(): break
                     libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "-listener.accept")
                     futures.append(executor.submit(thread_client, conn, self))
                     libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"futures count: {len(futures)}")
