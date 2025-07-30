@@ -12,7 +12,6 @@ from pylibcommons.libscheduler import schedule_jobs, schedule_jobs_multiprocesse
 import threading
 
 from multiprocessing import Value
-import sys
 
 def test_schedule_mp_1():
     class Process:

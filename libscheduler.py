@@ -85,7 +85,6 @@ def schedule_jobs_multiprocesses(processes, jobs_count, process_filter = lambda 
     def target(lock, index, processes, process_filter, print_stderr, print_stdout, exception_on_error, stop_on_exception, log, exceptions, stop_control, thread_name, child_conn):
         try:
             child_conn.send(thread_name)
-            is_stopped = stop_control.is_stopped()
             while not stop_control.is_stopped():
                 with lock:
                     idx = index[0]

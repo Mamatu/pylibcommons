@@ -12,7 +12,7 @@ import pytest
 @mock.patch("time.time")
 def test_while_with_timeout(time_time_mock, time_sleep_mock):
     from pylibcommons import libloop
-    with pytest.raises(libloop.TimeoutException) as excinfo:
+    with pytest.raises(libloop.TimeoutException):
         time_sleep_mock.side_effect = lambda x: print(f"Sleeping for {x} seconds")
         time_time_mock.side_effect = [0, 0, 0.7, 1] 
         def condition():

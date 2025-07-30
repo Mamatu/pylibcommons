@@ -5,7 +5,6 @@ __license__ = "Apache License"
 __version__ = "2.0"
 __maintainer__ = "Marcin Matula"
 
-import threading
 import time
 
 class TimeoutException(Exception):
