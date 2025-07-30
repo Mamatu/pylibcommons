@@ -35,7 +35,7 @@ class _Server:
         if self.thread.is_stopped():
             libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"Server already stopped: {self.address}")
             return
-        self.thread.stop()
+        self.thread.get_stop_control().stop()
         from multiprocessing.connection import Client
         with Client(self.address) as client:
             client.close()
@@ -63,7 +63,6 @@ class _Server:
                         libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"-client {client}.recv")
                         output = handler(line, client)
                         if isinstance(output, StopExecution) or output == StopExecution:
-                            self.stop()
                             libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "Stop execution")
                             return
                 except EOFError as eof:
