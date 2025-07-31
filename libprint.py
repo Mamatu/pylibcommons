@@ -256,7 +256,7 @@ def get_func_info(**kwargs):
     lineno = libkw.handle_kwargs("lineno", default_output = None, **kwargs)
     prefix = libkw.handle_kwargs("prefix", default_output = None, **kwargs)
     args = libkw.handle_kwargs("args", default_output = None, **kwargs)
-    print_traceback = libkw.handle_kwargs("traceback", default_output = False, **kwargs)
+    print_traceback = libkw.handle_kwargs("print_traceback", default_output = False, **kwargs)
     print_current_time = is_enabled_print_current_time(**kwargs)
     print_thread_id = is_enabled_print_thread_id()
     ct = ""

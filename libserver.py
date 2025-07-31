@@ -21,19 +21,23 @@ def run(handler, address):
 
 class _Server:
     def __init__(self, handler, address):
-        libprint.print_func_info(prefix = "+", logger = log.debug)
+        libprint.print_func_info(prefix = "+", logger = log.info)
         self.lock = threading.Lock()
         self.cv = threading.Condition(self.lock)
         self.address = address
         from multiprocessing.connection import Listener
-        self.listener = Listener(address)
+        try:
+            self.listener = Listener(address)
+        except Exception as e:
+            libprint.print_func_info(prefix = "*", logger = log.error, extra_string = f"Error creating listener: {e}")
+            raise e
         self.thread = libthread.Thread(target = _Server.run_server, args = [self, handler, address])
         self.thread.start()
-        libprint.print_func_info(prefix = "-", logger = log.debug)
+        libprint.print_func_info(prefix = "-", logger = log.info)
     def stop(self):
-        libprint.print_func_info(logger = log.debug, extra_string = f"Stop server: {self.address}")
+        libprint.print_func_info(logger = log.info, extra_string = f"Stop server: {self.address}")
         if self.thread.is_stopped():
-            libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"Server already stopped: {self.address}")
+            libprint.print_func_info(prefix = "*", logger = log.info, extra_string = f"Server already stopped: {self.address}")
             return
         self.thread.get_stop_control().stop()
         from multiprocessing.connection import Client
@@ -44,7 +48,7 @@ class _Server:
         self.thread.join()
     @staticmethod
     def run_server(self, handler, address, stop_control):
-        libprint.print_func_info(prefix = "+", logger = log.debug)
+        libprint.print_func_info(prefix = "+", logger = log.info)
         try:
             def call(callback):
                 if callback is not None and callable(callback):
@@ -63,22 +67,22 @@ class _Server:
                         libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"-client {client}.recv")
                         output = handler(line, client)
                         if isinstance(output, StopExecution) or output == StopExecution:
-                            libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "Stop execution")
+                            libprint.print_func_info(prefix = "*", logger = log.info, extra_string = "Stop execution")
                             return
                 except EOFError as eof:
                     libprint.print_func_info(prefix = "*", logger = log.error, extra_string = f"{eof}")
                 finally:
                     client.close()
-                    libprint.print_func_info(prefix = "-", logger = log.debug, extra_string = f"{client}")
+                    libprint.print_func_info(prefix = "-", logger = log.info, extra_string = f"{client}")
             with concurrent.ThreadPoolExecutor() as executor:
                 futures = []
-                while not self.thread.is_stopped():
-                    libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "+listener.accept")
+                while not stop_control.is_stopped():
+                    libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"+listener.accept")
                     conn = self.listener.accept()
-                    if self.thread.is_stopped(): break
-                    libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "-listener.accept")
+                    if stop_control.is_stopped(): break
+                    libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"-listener.accept")
                     futures.append(executor.submit(thread_client, conn, self))
                     libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"futures count: {len(futures)}")
                 for f in futures: f.result()
         finally:
-            libprint.print_func_info(prefix = "-", logger = log.debug)
+            libprint.print_func_info(prefix = "-", logger = log.info)

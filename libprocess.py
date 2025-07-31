@@ -14,6 +14,7 @@ from pylibcommons.private import libtemp, libprocessmonitor
 
 import logging
 log = logging.getLogger(__name__)
+import traceback
 
 class Process:
     class ReturnCodeException(Exception):
@@ -185,7 +186,6 @@ class Process:
             if exception_on_error and returncode != 0:
                 raise Process.ReturnCodeException(self.cmd, returncode, _stdout, _stderr)
         finally:
-            self.stop()
             libprint.print_func_info(logger = log.debug, print_current_time = True)
 
 def make(cmd, delete_log_file = True):

@@ -8,6 +8,13 @@ __maintainer__ = "Marcin Matula"
 import concurrent.futures as concurrent
 import threading
 
+from pylibcommons import libprint, libthread
+import logging
+import threading
+
+log = logging.getLogger(__name__)
+import traceback
+
 class StopControl:
     def __init__(self, lock = threading.RLock()):
         self.threads_with_stop = []
@@ -34,11 +41,14 @@ class StopControl:
         tws = []
         with self.lock:
             tws = self.threads_with_stop.copy()
+        if len(tws) == 0:
+            return False
         for thread in tws:
             if not thread.is_stopped():
                 return False
         return True
     def stop(self):
+        traceback.print_stack()
         def stop_single(self, index):
             thread = None
             with self.lock:
