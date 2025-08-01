@@ -28,17 +28,20 @@ class _Server:
         from multiprocessing.connection import Listener
         try:
             self.listener = Listener(address)
+            libprint.print_func_info(prefix = "*", logger = log.error, extra_string = f"Created listener. Address: {self.address}")
         except Exception as e:
-            libprint.print_func_info(prefix = "*", logger = log.error, extra_string = f"Error creating listener: {e}")
+            libprint.print_func_info(prefix = "*", logger = log.error, extra_string = f"Error creating listener: {e} Address: {self.address}")
             raise e
         self.thread = libthread.Thread(target = _Server.run_server, args = [self, handler, address])
         self.thread.start()
         libprint.print_func_info(prefix = "-", logger = log.info)
+        self.stopped = False
     def stop(self):
         libprint.print_func_info(logger = log.info, extra_string = f"Stop server: {self.address}")
-        if self.thread.is_stopped():
+        if self.stopped:
             libprint.print_func_info(prefix = "*", logger = log.info, extra_string = f"Server already stopped: {self.address}")
             return
+        self.stopped = True
         self.thread.get_stop_control().stop()
         from multiprocessing.connection import Client
         with Client(self.address) as client:
