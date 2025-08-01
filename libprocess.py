@@ -184,6 +184,8 @@ class Process:
                 elif callable(callback_on_error):
                     return callback_on_error(returncode, _stdout, _stderr)
             if exception_on_error and returncode != 0:
+                libprint.print_func_info(logger = log.error, extra_string = f"Process {self.cmd} finished with return code {returncode}.")
+                self.stop()
                 raise Process.ReturnCodeException(self.cmd, returncode, _stdout, _stderr)
         finally:
             libprint.print_func_info(logger = log.debug, print_current_time = True)
