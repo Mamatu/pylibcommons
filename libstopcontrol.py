@@ -8,7 +8,7 @@ __maintainer__ = "Marcin Matula"
 import concurrent.futures as concurrent
 import threading
 
-from pylibcommons import libprint, libthread
+from pylibcommons import libprint
 import logging
 
 log = logging.getLogger(__name__)

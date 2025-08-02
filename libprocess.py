@@ -14,7 +14,6 @@ from pylibcommons.private import libtemp, libprocessmonitor
 
 import logging
 log = logging.getLogger(__name__)
-import traceback
 
 class Process:
     class ReturnCodeException(Exception):

@@ -82,10 +82,10 @@ class _Server:
             with concurrent.ThreadPoolExecutor() as executor:
                 futures = []
                 while not stop_control.is_stopped():
-                    libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"+listener.accept")
+                    libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "+listener.accept")
                     conn = self.listener.accept()
                     if stop_control.is_stopped(): break
-                    libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"-listener.accept")
+                    libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = "-listener.accept")
                     futures.append(executor.submit(thread_client, conn, self))
                     libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"futures count: {len(futures)}")
                 for f in futures: f.result()
