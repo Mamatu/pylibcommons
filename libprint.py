@@ -258,7 +258,8 @@ def get_func_info(**kwargs):
     args = libkw.handle_kwargs("args", default_output = None, **kwargs)
     print_traceback = libkw.handle_kwargs("print_traceback", default_output = False, **kwargs)
     print_current_time = is_enabled_print_current_time(**kwargs)
-    print_thread_id = is_enabled_print_thread_id()
+    print_thread_id = libkw.handle_kwargs("print_thread_id", default_output = False, **kwargs)
+    print_thread_id = print_thread_id or is_enabled_print_thread_id()
     ct = ""
     if args is None:
         kwargs_1 = kwargs.copy()
