@@ -10,10 +10,8 @@ import threading
 
 from pylibcommons import libprint, libthread
 import logging
-import threading
 
 log = logging.getLogger(__name__)
-import traceback
 
 class StopControl:
     def __init__(self, lock = threading.RLock()):
@@ -48,11 +46,12 @@ class StopControl:
                 return False
         return True
     def stop(self):
-        traceback.print_stack()
+        libprint.print_func_info(logger = log.debug, extra_string = "Stopping threads", print_traceback = True)
         def stop_single(self, index):
             thread = None
             with self.lock:
                 thread = self.threads_with_stop[index]
+            libprint.print_func_info(logger = log.debug, extra_string = f"Stop thread {thread.ident}")
             thread.stop()
         if self._executor is None:
             self._executor = concurrent.ThreadPoolExecutor(max_workers = len(self.threads_with_stop))
