@@ -47,6 +47,7 @@ class _Server:
         with Client(self.address) as client:
             client.close()
         self.listener.close()
+        libprint.print_func_info(logger = log.info, extra_string = f"Listener stopped {self.address}")
     def wait_for_finish(self):
         self.thread.join()
     @staticmethod
@@ -57,7 +58,7 @@ class _Server:
                 if callback is not None and callable(callback):
                     callback()
             def thread_client(client, self):
-                libprint.print_func_info(prefix = "+", logger = log.debug, extra_string = f"{client}")
+                libprint.print_func_info(prefix = "+", logger = log.debug, extra_string = f"Create client: {client}")
                 try:
                     while not stop_control.is_stopped():
                         libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"+client {client}.recv")
@@ -71,7 +72,8 @@ class _Server:
                         output = handler(line, client)
                         if isinstance(output, StopExecution) or output == StopExecution:
                             libprint.print_func_info(prefix = "*", logger = log.info, extra_string = "Stop execution")
-                            return
+                            self.stop()
+                            return output
                 except EOFError as eof:
                     libprint.print_func_info(prefix = "*", logger = log.error, extra_string = f"{eof}")
                 finally:
@@ -88,4 +90,4 @@ class _Server:
                     libprint.print_func_info(prefix = "*", logger = log.debug, extra_string = f"futures count: {len(futures)}")
                 for f in futures: f.result()
         finally:
-            libprint.print_func_info(prefix = "-", logger = log.info)
+            libprint.print_func_info(prefix = "-", logger = log.info, print_thread_id = True)
