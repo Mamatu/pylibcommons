@@ -18,7 +18,7 @@ def excepthook(exctype, value, tb, thread):
     sys.__excepthook__(exctype, value, tb)
 
 class Thread(threading.Thread):
-    def __init__(self, target, stop_callback = None, thread_name = None, args = None, kwargs = None):
+    def __init__(self, target, stop_callback = None, thread_name = None, stop_control = None, args = None, kwargs = None):
         if args is None:
             args = []
         if kwargs is None:
@@ -31,7 +31,10 @@ class Thread(threading.Thread):
         self._thread_cond = threading.Condition()
         self.thread_name = thread_name
         self.stop_callback = stop_callback
-        self.stop_control = libstopcontrol.StopControl()
+        if stop_control is None:
+            self.stop_control = libstopcontrol.StopControl()
+        else:
+            self.stop_control = stop_control
         self.stop_control.add(self)
         self.exception_info = None
         def _thread_target_wrapper(*args, **kwargs):
