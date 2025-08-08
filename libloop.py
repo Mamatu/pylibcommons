@@ -34,5 +34,5 @@ def while_with_timeout(timeout, condition, timeout_msg = None, time_sleep = 0.1)
         time.sleep(time_sleep)
     if timeouted:
         if timeout_msg is None:
-            timeout_msg = "Timeout in while"
+            timeout_msg = f"Timeout in while loop after {timeout} seconds. time_sleep={time_sleep}."
         raise TimeoutException(timeout_msg)
