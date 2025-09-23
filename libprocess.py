@@ -21,7 +21,7 @@ class Process:
             self.cmd = cmd
             self.returncode = returncode
             Exception.__init__(self, f"Return code is not zero in process {cmd}. It is {returncode}. stdout: {_stdout}, stderr: {_stderr}")
-    def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True):
+    def __init__(self, cmd, use_temp_file = True, shell = True, timeout = None, delete_log_file = True, process_log_type = "log_format"):
         self.is_destroyed_flag = False
         self.cmd = cmd
         self.process = None
@@ -35,16 +35,34 @@ class Process:
         self.stdout_lines = []
         self.stderr_lines = []
         self.timeout = timeout
-        def callback(state, lines):
-            if state == "stdout":
-                self.stdout_lines = lines
-                libprint.print_func_info(logger = log.info, extra_string = f"Process {self.cmd} stdout: {lines}")
-            elif state == "stderr":
-                self.stderr_lines = lines
-                libprint.print_func_info(logger = log.error, extra_string = f"Process {self.cmd} stderr: {lines}")
-            else:
-                log.info(f"Returncode: {lines}")
-        self.processthread = libprocessmonitor.ProcessMonitor(self, callback)
+        if process_log_type == "simple":
+            def simple_callback(state, lines):
+                if state == "stdout":
+                    self.stdout_lines = lines
+                    log.info(f"Process {self.cmd} stdout: {lines}")
+                elif state == "stderr":
+                    self.stderr_lines = lines
+                    log.error(f"Process {self.cmd} stderr: {lines}")
+                else:
+                    log.info(f"Returncode: {lines}")
+            self.processthread = libprocessmonitor.ProcessMonitor(self, simple_callback)
+        elif process_log_type == "log_format":
+            self.lines = {}
+            def log_format_callback(state, lines):
+                limit = self.lines.get(state, 0)
+                log = ""
+                for idx, line in enumerate(lines):
+                    if idx < limit:
+                        continue
+                    log += f"{line}\n"
+                self.lines[state] = len(lines)
+                if state == "stdout":
+                    log.info(f"Process {self.cmd} stdout({limit}-{len(lines)}):\n{log}")
+                elif state == "stderr":
+                    log.error(f"Process {self.cmd} stderr({limit}-{len(lines)}):\n{log}")
+                else:
+                    log.info(f"Returncode: {lines}")
+            self.processthread = libprocessmonitor.ProcessMonitor(self, log_format_callback)
     def get_pid(self):
         if self.process is None:
             return None
