@@ -11,6 +11,7 @@ from pylibcommons import libkw
 import datetime
 import os
 import threading
+import traceback
 
 def is_enabled_print_current_time(**kwargs):
     print_current_time = libkw.handle_kwargs("print_current_time", default_output = False, **kwargs)
@@ -255,8 +256,10 @@ def get_func_info(**kwargs):
     lineno = libkw.handle_kwargs("lineno", default_output = None, **kwargs)
     prefix = libkw.handle_kwargs("prefix", default_output = None, **kwargs)
     args = libkw.handle_kwargs("args", default_output = None, **kwargs)
+    print_traceback = libkw.handle_kwargs("print_traceback", default_output = False, **kwargs)
     print_current_time = is_enabled_print_current_time(**kwargs)
-    print_thread_id = is_enabled_print_thread_id()
+    print_thread_id = libkw.handle_kwargs("print_thread_id", default_output = False, **kwargs)
+    print_thread_id = print_thread_id or is_enabled_print_thread_id()
     ct = ""
     if args is None:
         kwargs_1 = kwargs.copy()
@@ -298,6 +301,10 @@ def get_func_info(**kwargs):
     if print_thread_id:
         tid = threading.current_thread().ident
         output = f"{output} tid = {tid}"
+    if print_traceback:
+        tb = traceback.format_stack()
+        tb = "".join(tb)
+        output = f"{output}\n{tb}"
     return output
 
 class _ArgName:
