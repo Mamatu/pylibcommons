@@ -47,19 +47,24 @@ class Process:
                     log.info(f"Returncode: {lines}")
             self.processthread = libprocessmonitor.ProcessMonitor(self, simple_callback)
         elif process_log_type == "log_format":
-            self.lines = {}
+            self.lines_idx = {}
             def log_format_callback(state, lines):
-                limit = self.lines.get(state, 0)
-                log = ""
-                for idx, line in enumerate(lines):
-                    if idx < limit:
-                        continue
-                    log += f"{line}\n"
-                self.lines[state] = len(lines)
+                def collect_lines(lines_buffer):
+                    limit = self.lines_idx.get(state, 0)
+                    log = ""
+                    for idx, line in enumerate(lines):
+                        if idx < limit:
+                            continue
+                        log += f"{line}\n"
+                        lines_buffer.append(line)
+                    self.lines_idx[state] = len(lines)
+                    return limit, len(lines), log
                 if state == "stdout":
-                    log.info(f"Process {self.cmd} stdout({limit}-{len(lines)}):\n{log}")
+                    limit, lenlines, log = collect_lines(self.stdout_lines)
+                    log.info(f"Process {self.cmd} stdout({limit}-{lenlines}):\n{log}")
                 elif state == "stderr":
-                    log.error(f"Process {self.cmd} stderr({limit}-{len(lines)}):\n{log}")
+                    limit, lenlines, log = collect_lines(self.stderr_lines)
+                    log.error(f"Process {self.cmd} stderr({limit}-{lenlines}):\n{log}")
                 else:
                     log.info(f"Returncode: {lines}")
             self.processthread = libprocessmonitor.ProcessMonitor(self, log_format_callback)
